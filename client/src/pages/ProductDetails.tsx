@@ -92,8 +92,28 @@ export default function ProductDetails() {
               status="Low"
               color="green"
             />
+            <NutrientCard 
+              label="Calories" 
+              value={`${product.calories || 0} kcal`} 
+              status={product.calories > 400 ? "High" : "Normal"}
+              color={product.calories > 400 ? "red" : "green"}
+            />
           </div>
         </div>
+
+        {/* Additives Section */}
+        {product.additives && product.additives.length > 0 && (
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Chemical Additives</h3>
+            <div className="flex flex-wrap gap-2">
+              {product.additives.map((additive: string, idx: number) => (
+                <div key={idx} className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-100 rounded-lg text-sm font-medium">
+                  {additive}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* AI Analysis CTA */}
         <Link href="/chat">

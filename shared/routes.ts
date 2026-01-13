@@ -48,6 +48,8 @@ export const api = {
           name: z.string(),
           brand: z.string().optional(),
           nutriments: z.record(z.any()).optional(),
+          additives: z.array(z.string()).optional(),
+          calories: z.number().optional(),
         }),
         404: errorSchemas.notFound,
       },

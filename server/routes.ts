@@ -62,7 +62,8 @@ export async function registerRoutes(
         brand: product.brands,
         nutriments: product.nutriments,
         image_url: product.image_url,
-        // Add more fields if needed
+        additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
+        calories: product.nutriments?.['energy-kcal_100g'],
       });
     } catch (error) {
       console.error("OpenFoodFacts error:", error);
