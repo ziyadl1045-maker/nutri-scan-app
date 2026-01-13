@@ -66,13 +66,25 @@ export async function registerRoutes(
       }
       
       const product = data.product;
+      const nutriments = product.nutriments || {};
+      const scoreValue = product.nutriscore_score !== undefined ? product.nutriscore_score : null;
+      
+      // Map Nutri-Score (-15 to 40) to 0-100 scale if available
+      // Otherwise fallback to calculation in frontend
+      let calculatedHealthScore = null;
+      if (scoreValue !== null) {
+        calculatedHealthScore = Math.max(0, Math.min(100, 100 - (scoreValue + 15) * (100 / 55)));
+      }
+
       const productData = {
         name: product.product_name || "Unknown Product",
         brand: product.brands,
-        nutriments: product.nutriments,
+        nutriments: nutriments,
         image_url: product.image_url,
         additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
-        calories: product.nutriments?.['energy-kcal_100g'],
+        calories: nutriments['energy-kcal_100g'],
+        healthScore: calculatedHealthScore,
+        nutriscore: product.nutriscore_grade,
       };
 
       // Save to history if user is logged in

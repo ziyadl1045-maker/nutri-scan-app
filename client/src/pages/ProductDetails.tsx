@@ -62,7 +62,9 @@ export default function ProductDetails() {
   };
 
   const currentProduct = aiLookupMutation.data || product;
-  const score = calculateScore(currentProduct);
+  const score = currentProduct?.healthScore !== undefined && currentProduct?.healthScore !== null 
+    ? currentProduct.healthScore 
+    : calculateScore(currentProduct);
 
   const getRecommendation = (s: number) => {
     if (s >= 80) return "Excellent product! You can enjoy this daily.";
