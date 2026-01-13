@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Leaf, ShieldCheck, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { SiGoogle } from "react-icons/si";
 
 export default function Landing() {
   return (
@@ -39,8 +40,8 @@ export default function Landing() {
               href="/api/login"
               className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-primary text-primary-foreground font-semibold text-lg shadow-lg shadow-primary/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
             >
-              Get Started
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <SiGoogle className="w-5 h-5 mr-2" />
+              Log In with Google
             </a>
           </div>
         </motion.div>
