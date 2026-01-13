@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Leaf, ShieldCheck, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-import { SiGoogle } from "react-icons/si";
+import { SiGoogle, SiReplit } from "react-icons/si";
 
 export default function Landing() {
   return (
@@ -37,11 +37,18 @@ export default function Landing() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <a 
-              href="/api/login"
+              href="/api/login?provider=google"
               className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-primary text-primary-foreground font-semibold text-lg shadow-lg shadow-primary/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
             >
               <SiGoogle className="w-5 h-5 mr-2" />
               Log In with Google
+            </a>
+            <a 
+              href="/api/login?provider=replit"
+              className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-slate-800 text-white font-semibold text-lg shadow-lg shadow-slate-800/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
+            >
+              <SiReplit className="w-5 h-5 mr-2" />
+              Log In with Replit
             </a>
           </div>
         </motion.div>

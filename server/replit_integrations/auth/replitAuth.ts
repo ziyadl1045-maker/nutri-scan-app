@@ -104,10 +104,17 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const provider = req.query.provider as string;
+    const authOptions: any = {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    };
+    
+    if (provider) {
+      authOptions.login_hint = `sub:${provider}`;
+    }
+
+    passport.authenticate(`replitauth:${req.hostname}`, authOptions)(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
