@@ -50,8 +50,26 @@ export const api = {
           nutriments: z.record(z.any()).optional(),
           additives: z.array(z.string()).optional(),
           calories: z.number().optional(),
+          isAI: z.boolean().optional(),
         }),
         404: errorSchemas.notFound,
+      },
+    },
+    aiLookup: {
+      method: 'POST' as const,
+      path: '/api/products/ai-lookup',
+      input: z.object({
+        name: z.string(),
+      }),
+      responses: {
+        200: z.object({
+          name: z.string(),
+          brand: z.string().optional(),
+          nutriments: z.record(z.any()).optional(),
+          additives: z.array(z.string()).optional(),
+          calories: z.number().optional(),
+          isAI: z.boolean().optional(),
+        }),
       },
     },
   },

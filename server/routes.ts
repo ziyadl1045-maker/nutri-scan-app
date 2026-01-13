@@ -3,6 +3,7 @@ import type { Server } from "http";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import { openai } from "./replit_integrations/chat/routes"; // Reuse openai client
 import { api } from "@shared/routes";
 import { storage } from "./storage";
 import { z } from "zod";
@@ -68,6 +69,47 @@ export async function registerRoutes(
     } catch (error) {
       console.error("OpenFoodFacts error:", error);
       res.status(500).json({ message: "Failed to fetch product data" });
+    }
+  });
+
+  // AI Fallback Lookup
+  app.post(api.products.aiLookup.path, async (req, res) => {
+    try {
+      const { name } = api.products.aiLookup.input.parse(req.body);
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-5.1",
+        messages: [
+          {
+            role: "system",
+            content: "You are a nutrition expert. Provide estimated nutritional facts for the given product in JSON format. Fields: name, brand, sugars (g), fat (g), proteins (g), salt (g), calories (kcal), additives (array of E-codes). All values per 100g."
+          },
+          {
+            role: "user",
+            content: `Product: ${name}`
+          }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const data = JSON.parse(response.choices[0].message.content || "{}");
+      
+      res.json({
+        name: data.name || name,
+        brand: data.brand || "AI Estimate",
+        nutriments: {
+          sugars: data.sugars || 0,
+          fat: data.fat || 0,
+          proteins: data.proteins || 0,
+          salt: data.salt || 0,
+        },
+        calories: data.calories || 0,
+        additives: data.additives || [],
+        isAI: true
+      });
+    } catch (error) {
+      console.error("AI Lookup error:", error);
+      res.status(500).json({ message: "Failed to estimate product data" });
     }
   });
 

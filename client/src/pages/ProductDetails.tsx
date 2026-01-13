@@ -1,21 +1,34 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useProduct } from "@/hooks/use-products";
 import { HealthGauge } from "@/components/HealthGauge";
 import { BottomNav } from "@/components/BottomNav";
-import { ArrowLeft, Share2, Info } from "lucide-react";
+import { ArrowLeft, Share2, Info, Search, Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { api } from "@shared/routes";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function ProductDetails() {
   const [match, params] = useRoute("/product/:barcode");
+  const [, setLocation] = useLocation();
   const barcode = match ? params.barcode : null;
   const { data: product, isLoading, error } = useProduct(barcode);
+  const [searchName, setSearchName] = useState("");
+
+  const aiLookupMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", api.products.aiLookup.path, { name });
+      return res.json();
+    },
+  });
   
   // Real health score calculation (simplified Nutri-Score logic)
   const calculateScore = (p: any) => {
     if (!p || !p.nutriments) return 0;
     
     let points = 0;
-    const n = p.nutriments;
+    const n = p.nutriments as Record<string, any>;
     
     // Negative points (bad)
     const energy = p.calories || 0;
@@ -48,7 +61,8 @@ export default function ProductDetails() {
     return Math.max(0, Math.min(100, 100 - (finalScore + 15) * 2));
   };
 
-  const score = calculateScore(product);
+  const currentProduct = aiLookupMutation.data || product;
+  const score = calculateScore(currentProduct);
 
   const getRecommendation = (s: number) => {
     if (s >= 80) return "Excellent product! You can enjoy this daily.";
@@ -58,28 +72,61 @@ export default function ProductDetails() {
     return "Very poor. Better to find a healthier alternative.";
   };
 
-  if (isLoading) {
+  if (isLoading || aiLookupMutation.isPending) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          {aiLookupMutation.isPending && <p className="text-sm font-medium text-muted-foreground animate-pulse">AI is estimating nutrition...</p>}
+        </div>
       </div>
     );
   }
 
-  if (error || !product) {
+  if ((error || !product) && !aiLookupMutation.data) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
-        <Info className="w-12 h-12 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold mb-2">Product Not Found</h2>
-        <p className="text-muted-foreground mb-6">
-          We couldn't find a product with barcode {barcode}. It might not be in our database yet.
+        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <Info className="w-8 h-8 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
+        <p className="text-muted-foreground mb-8">
+          We couldn't find a product with barcode <span className="font-mono font-bold text-foreground">{barcode}</span>. 
+          Would you like to search by name instead?
         </p>
-        <Link href="/scan" className="px-6 py-3 bg-primary text-white rounded-xl font-medium">
-          Scan Another
-        </Link>
+        
+        <div className="w-full max-w-sm space-y-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input 
+              type="text"
+              placeholder="Enter product name (e.g. Whole Milk)"
+              className="w-full h-14 pl-12 pr-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/20 transition-all text-lg"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && searchName && aiLookupMutation.mutate(searchName)}
+            />
+          </div>
+          <button 
+            disabled={!searchName}
+            onClick={() => aiLookupMutation.mutate(searchName)}
+            className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-95"
+          >
+            <Sparkles className="w-5 h-5" />
+            Estimate with AI
+          </button>
+          
+          <div className="pt-4">
+            <Link href="/scan" className="text-sm font-semibold text-primary hover:underline">
+              Scan Another Product
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
+
+  const displayProduct = currentProduct;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -101,8 +148,14 @@ export default function ProductDetails() {
             {/* Placeholder for product image if not available */}
              <span className="text-2xl font-bold text-gray-300">IMG</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display mb-1">{product.name}</h2>
-          <p className="text-muted-foreground">{product.brand || "Unknown Brand"}</p>
+          <h2 className="text-2xl font-bold text-slate-900 font-display mb-1">{displayProduct.name}</h2>
+          <p className="text-muted-foreground">{displayProduct.brand || "Unknown Brand"}</p>
+          {displayProduct.isAI && (
+            <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider border border-amber-100">
+              <Info className="w-3 h-3" />
+              AI Estimate
+            </div>
+          )}
         </div>
 
         {/* Gauge */}
@@ -119,43 +172,43 @@ export default function ProductDetails() {
           <div className="grid grid-cols-2 gap-4">
             <NutrientCard 
               label="Sugars" 
-              value={`${Math.round(product.nutriments?.sugars || 0)}g`} 
-              status={parseFloat(product.nutriments?.sugars) > 10 ? "Too High" : "Reasonable"}
-              color={parseFloat(product.nutriments?.sugars) > 10 ? "red" : "green"}
+              value={`${Math.round(displayProduct.nutriments?.sugars || 0)}g`} 
+              status={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "Too High" : "Reasonable"}
+              color={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "red" : "green"}
             />
              <NutrientCard 
               label="Fat" 
-              value={`${Math.round(product.nutriments?.fat || 0)}g`} 
-              status={parseFloat(product.nutriments?.fat) > 15 ? "High" : "Moderate"}
-              color={parseFloat(product.nutriments?.fat) > 15 ? "red" : "orange"}
+              value={`${Math.round(displayProduct.nutriments?.fat || 0)}g`} 
+              status={parseFloat(displayProduct.nutriments?.fat) > 15 ? "High" : "Moderate"}
+              color={parseFloat(displayProduct.nutriments?.fat) > 15 ? "red" : "orange"}
             />
             <NutrientCard 
               label="Protein" 
-              value={`${Math.round(product.nutriments?.proteins || 0)}g`} 
+              value={`${Math.round(displayProduct.nutriments?.proteins || 0)}g`} 
               status="Healthy"
               color="green"
             />
             <NutrientCard 
               label="Salt" 
-              value={`${(product.nutriments?.salt || 0).toFixed(2)}g`} 
-              status={parseFloat(product.nutriments?.salt) > 1.5 ? "High" : "Low"}
-              color={parseFloat(product.nutriments?.salt) > 1.5 ? "red" : "green"}
+              value={`${(displayProduct.nutriments?.salt || 0).toFixed(2)}g`} 
+              status={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "High" : "Low"}
+              color={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "red" : "green"}
             />
             <NutrientCard 
               label="Calories" 
-              value={`${Math.round(product.calories || 0)} kcal`} 
-              status={product.calories > 400 ? "High" : "Normal"}
-              color={product.calories > 400 ? "red" : "green"}
+              value={`${Math.round(displayProduct.calories || 0)} kcal`} 
+              status={displayProduct.calories > 400 ? "High" : "Normal"}
+              color={displayProduct.calories > 400 ? "red" : "green"}
             />
           </div>
         </div>
 
         {/* Additives Section */}
-        {product.additives && product.additives.length > 0 && (
+        {displayProduct.additives && displayProduct.additives.length > 0 && (
           <div>
             <h3 className="text-lg font-bold text-slate-900 mb-4">Chemical Additives</h3>
             <div className="flex flex-wrap gap-2">
-              {product.additives.map((additive: string, idx: number) => (
+              {displayProduct.additives.map((additive: string, idx: number) => (
                 <div key={idx} className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-100 rounded-lg text-sm font-medium">
                   {additive}
                 </div>
