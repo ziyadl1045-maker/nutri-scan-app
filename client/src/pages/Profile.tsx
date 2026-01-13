@@ -4,8 +4,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, ChevronRight, Scan } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@shared/routes";
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { Link } from "wouter";
+import { fr, arSA, enUS } from "date-fns/locale";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -18,8 +25,19 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
-  const { profile, updateProfile, isUpdating, isLoading } = useProfile();
+  const { profile, updateProfile, isUpdating, isLoading: isProfileLoading } = useProfile();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+
+  const { data: scans, isLoading: isScansLoading } = useQuery({
+    queryKey: [api.profile.scans.path],
+  });
+
+  const getLocale = () => {
+    if (i18n.language === "fr") return fr;
+    if (i18n.language === "ar") return arSA;
+    return enUS;
+  };
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -32,7 +50,7 @@ export default function ProfilePage() {
     values: profile ? {
       firstName: profile.firstName || "",
       lastName: profile.lastName || "",
-      age: profile.age || 0, // Using age if added to schema extension on backend, otherwise handling gracefully
+      age: profile.age || 0,
       gender: profile.gender || "",
     } : undefined
   });
@@ -41,19 +59,19 @@ export default function ProfilePage() {
     updateProfile(data, {
       onSuccess: () => {
         toast({
-          title: "Profile updated",
-          description: "Your information has been saved.",
+          title: t('profile_updated') || "Profile updated",
+          description: t('profile_saved_desc') || "Your information has been saved.",
         });
       },
     });
   };
 
-  if (isLoading) {
+  if (isProfileLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="bg-white px-6 py-12 pb-16 rounded-b-[2.5rem] shadow-sm text-center">
         <div className="w-24 h-24 mx-auto bg-emerald-100 rounded-full mb-4 overflow-hidden border-4 border-white shadow-lg">
           {user?.profileImageUrl ? (
@@ -68,19 +86,19 @@ export default function ProfilePage() {
         <p className="text-muted-foreground">{user?.email}</p>
       </div>
 
-      <div className="max-w-md mx-auto px-6 -mt-8">
+      <div className="max-w-md mx-auto px-6 -mt-8 space-y-6">
         <div className="bg-white p-6 rounded-3xl shadow-lg shadow-slate-200/50">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">First Name</label>
+                <label className="text-sm font-medium text-slate-700">{t('first_name') || 'First Name'}</label>
                 <input 
                   {...form.register("firstName")}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Last Name</label>
+                <label className="text-sm font-medium text-slate-700">{t('last_name') || 'Last Name'}</label>
                 <input 
                   {...form.register("lastName")}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
@@ -90,7 +108,7 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Age</label>
+                <label className="text-sm font-medium text-slate-700">{t('age') || 'Age'}</label>
                 <input 
                   type="number"
                   {...form.register("age")}
@@ -98,15 +116,15 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Gender</label>
+                <label className="text-sm font-medium text-slate-700">{t('gender') || 'Gender'}</label>
                 <select 
                   {...form.register("gender")}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                 >
-                  <option value="">Select</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
+                  <option value="">{t('select') || 'Select'}</option>
+                  <option value="male">{t('male') || 'Male'}</option>
+                  <option value="female">{t('female') || 'Female'}</option>
+                  <option value="other">{t('other') || 'Other'}</option>
                 </select>
               </div>
             </div>
@@ -116,7 +134,7 @@ export default function ProfilePage() {
               disabled={isUpdating}
               className="w-full py-4 mt-4 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50"
             >
-              {isUpdating ? "Saving..." : "Save Changes"}
+              {isUpdating ? (t('saving') || "Saving...") : (t('save_changes') || "Save Changes")}
             </button>
           </form>
 
@@ -126,8 +144,49 @@ export default function ProfilePage() {
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-red-500 font-medium hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-5 h-5" />
-              Sign Out
+              {t('sign_out') || 'Sign Out'}
             </button>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl shadow-lg shadow-slate-200/50">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">{t('scan_history') || 'Scan History'}</h3>
+          
+          <div className="space-y-4">
+            {isScansLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : scans?.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4 text-sm">{t('no_scans_yet') || 'No scans yet'}</p>
+            ) : (
+              scans?.map((scan: any) => (
+                <Link key={scan.id} href={`/product/${scan.barcode}`}>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center justify-between group cursor-pointer border-b border-slate-50 pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden">
+                        {scan.imageUrl ? (
+                          <img src={scan.imageUrl} alt={scan.productName} className="w-full h-full object-cover" />
+                        ) : (
+                          <Scan className="text-slate-300 w-5 h-5" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{scan.productName}</h4>
+                        <p className="text-[10px] text-muted-foreground">
+                          {formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true, locale: getLocale() })}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-gray-300 group-hover:text-primary transition-colors ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
+                  </motion.div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </div>

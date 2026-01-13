@@ -1,18 +1,27 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
-import { Scan, ChevronRight, User } from "lucide-react";
+import { Scan, ChevronRight, User, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@shared/routes";
+import { useTranslation } from "react-i18next";
+import { formatDistanceToNow } from "date-fns";
+import { fr, arSA, enUS } from "date-fns/locale";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  
-  // Dummy recent scans for MVP visualization
-  const recentScans = [
-    { id: 1, name: "Oat Milk Barista", score: 22, date: "Today" },
-    { id: 2, name: "Chocolate Cookies", score: 85, date: "Yesterday" },
-    { id: 3, name: "Green Tea", score: 12, date: "Yesterday" },
-  ];
+  const { t, i18n } = useTranslation();
+
+  const { data: scans, isLoading } = useQuery({
+    queryKey: [api.profile.scans.path],
+  });
+
+  const getLocale = () => {
+    if (i18n.language === "fr") return fr;
+    if (i18n.language === "ar") return arSA;
+    return enUS;
+  };
 
   const getScoreColor = (score: number) => {
     if (score <= 25) return "bg-emerald-500";
@@ -22,12 +31,12 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="bg-white px-6 py-8 pb-12 rounded-b-[2.5rem] shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-muted-foreground font-medium">Welcome back,</p>
+            <p className="text-muted-foreground font-medium">{t('welcome_back') || 'Welcome back,'}</p>
             <h1 className="text-3xl font-bold text-slate-900 font-display">
               {user?.firstName || "Friend"}!
             </h1>
@@ -54,8 +63,8 @@ export default function Dashboard() {
             
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-2">Scan Product</h2>
-                <p className="text-emerald-100">Analyze barcodes instantly</p>
+                <h2 className="text-2xl font-bold mb-2">{t('scan') || 'Scan Product'}</h2>
+                <p className="text-emerald-100">{t('analyze_barcodes') || 'Analyze barcodes instantly'}</p>
               </div>
               <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                 <Scan className="w-6 h-6 text-white" />
@@ -67,30 +76,49 @@ export default function Dashboard() {
 
       <div className="px-6 mt-8">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-slate-900">Recent Scans</h3>
-          <button className="text-sm font-semibold text-primary">View All</button>
+          <h3 className="text-xl font-bold text-slate-900">{t('recent_scans') || 'Recent Scans'}</h3>
+          <Link href="/profile">
+            <button className="text-sm font-semibold text-primary">{t('view_all') || 'View All'}</button>
+          </Link>
         </div>
 
         <div className="space-y-4">
-          {recentScans.map((scan) => (
-            <motion.div 
-              key={scan.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl ${getScoreColor(scan.score)} flex items-center justify-center text-white font-bold text-lg shadow-sm`}>
-                  {scan.score}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900">{scan.name}</h4>
-                  <p className="text-xs text-muted-foreground">{scan.date}</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
-            </motion.div>
-          ))}
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : scans?.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-200">
+              <p className="text-muted-foreground">{t('no_scans_yet') || 'No scans yet'}</p>
+            </div>
+          ) : (
+            scans?.slice(0, 5).map((scan: any) => (
+              <Link key={scan.id} href={`/product/${scan.barcode}`}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden">
+                      {scan.imageUrl ? (
+                        <img src={scan.imageUrl} alt={scan.productName} className="w-full h-full object-cover" />
+                      ) : (
+                        <Scan className="text-slate-300 w-6 h-6" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 line-clamp-1">{scan.productName}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true, locale: getLocale() })}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-gray-300 ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
+                </motion.div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
 
