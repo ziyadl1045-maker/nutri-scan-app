@@ -70,31 +70,31 @@ export default function ProductDetails() {
           <div className="grid grid-cols-2 gap-4">
             <NutrientCard 
               label="Sugars" 
-              value={`${product.nutriments?.sugars || 0}g`} 
-              status={parseFloat(product.nutriments?.sugars) > 10 ? "High" : "Low"}
+              value={`${Math.round(product.nutriments?.sugars || 0)}g`} 
+              status={parseFloat(product.nutriments?.sugars) > 10 ? "Too High" : "Reasonable"}
               color={parseFloat(product.nutriments?.sugars) > 10 ? "red" : "green"}
             />
              <NutrientCard 
               label="Fat" 
-              value={`${product.nutriments?.fat || 0}g`} 
-              status={parseFloat(product.nutriments?.fat) > 15 ? "High" : "Medium"}
-              color="orange"
+              value={`${Math.round(product.nutriments?.fat || 0)}g`} 
+              status={parseFloat(product.nutriments?.fat) > 15 ? "High" : "Moderate"}
+              color={parseFloat(product.nutriments?.fat) > 15 ? "red" : "orange"}
             />
             <NutrientCard 
               label="Protein" 
-              value={`${product.nutriments?.proteins || 0}g`} 
-              status="Good"
+              value={`${Math.round(product.nutriments?.proteins || 0)}g`} 
+              status="Healthy"
               color="green"
             />
             <NutrientCard 
               label="Salt" 
-              value={`${product.nutriments?.salt || 0}g`} 
-              status="Low"
-              color="green"
+              value={`${(product.nutriments?.salt || 0).toFixed(2)}g`} 
+              status={parseFloat(product.nutriments?.salt) > 1.5 ? "High" : "Low"}
+              color={parseFloat(product.nutriments?.salt) > 1.5 ? "red" : "green"}
             />
             <NutrientCard 
               label="Calories" 
-              value={`${product.calories || 0} kcal`} 
+              value={`${Math.round(product.calories || 0)} kcal`} 
               status={product.calories > 400 ? "High" : "Normal"}
               color={product.calories > 400 ? "red" : "green"}
             />
