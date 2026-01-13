@@ -60,7 +60,7 @@ export function useChatStream(conversationId: number) {
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, imageUrl?: string | null) => {
     setIsStreaming(true);
     setStreamingContent(""); // Reset stream buffer
 
@@ -70,7 +70,7 @@ export function useChatStream(conversationId: number) {
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, imageUrl }),
         credentials: "include",
       });
 

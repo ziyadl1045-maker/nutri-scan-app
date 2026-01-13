@@ -63,17 +63,27 @@ export function registerChatRoutes(app: Express): void {
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
       const conversationId = parseInt(req.params.id);
-      const { content } = req.body;
+      const { content, imageUrl } = req.body;
 
-      // Save user message
+      // Save user message (content can be text or include image description)
       await chatStorage.createMessage(conversationId, "user", content);
 
       // Get conversation history for context
       const messages = await chatStorage.getMessagesByConversation(conversationId);
-      const chatMessages = messages.map((m) => ({
+      const chatMessages: any[] = messages.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       }));
+
+      // If there's an image, we use GPT-4o-mini which supports vision
+      if (imageUrl) {
+        // Replace the last message content with the multimodal structure
+        const lastMsg = chatMessages[chatMessages.length - 1];
+        lastMsg.content = [
+          { type: "text", text: content || "What is in this image?" },
+          { type: "image_url", image_url: { url: imageUrl } }
+        ];
+      }
 
       // Set up SSE
       res.setHeader("Content-Type", "text/event-stream");
@@ -82,7 +92,7 @@ export function registerChatRoutes(app: Express): void {
 
       // Stream response from OpenAI
       const stream = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-4o-mini", // Better model for vision and general reasoning
         messages: chatMessages,
         stream: true,
         max_completion_tokens: 2048,
