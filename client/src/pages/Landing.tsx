@@ -1,11 +1,47 @@
 import { Link } from "wouter";
-import { ArrowRight, Leaf, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, Leaf, ShieldCheck, Zap, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { SiGoogle, SiApple } from "react-icons/si";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Landing() {
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-50">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Globe className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => changeLanguage('en')}>
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+              Français
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('ar')}>
+              العربية
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Abstract Background Shapes */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[20%] -right-[20%] w-[80%] h-[80%] bg-primary/5 rounded-full blur-3xl" />
@@ -22,17 +58,18 @@ export default function Landing() {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
             <Leaf className="w-4 h-4" />
-            <span>AI-Powered Nutrition Analysis</span>
+            <span>{t('instant_scanning')}</span>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-bold font-display tracking-tight text-foreground leading-[1.1]">
-            Eat smarter, <br />
-            <span className="text-gradient">live better.</span>
+            {t('welcome').split(',')[0]}, <br />
+            <span className="text-gradient">{t('welcome').split(',')[1]}</span>
           </h1>
           
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Scan any barcode to instantly get AI-driven health insights. 
-            Join tournaments, track your habits, and chat with your personal nutritionist.
+            {t('scan_any_barcode')} 
+            <br />
+            {t('join_tournaments')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
@@ -41,14 +78,14 @@ export default function Landing() {
               className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-primary text-primary-foreground font-semibold text-lg shadow-lg shadow-primary/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
             >
               <SiGoogle className="w-5 h-5 mr-2" />
-              Log In with Google
+              {t('log_in_google')}
             </a>
             <a 
               href="/api/login?provider=apple"
               className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-slate-900 text-white font-semibold text-lg shadow-lg shadow-slate-900/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
             >
               <SiApple className="w-5 h-5 mr-2" />
-              Log In with Apple
+              {t('log_in_apple')}
             </a>
           </div>
         </motion.div>
@@ -58,18 +95,18 @@ export default function Landing() {
           {[
             {
               icon: Zap,
-              title: "Instant Scanning",
-              desc: "Lightning fast barcode detection for millions of products worldwide."
+              title: t('instant_scanning'),
+              desc: t('instant_scanning_desc')
             },
             {
               icon: ShieldCheck,
-              title: "AI Analysis",
-              desc: "Get deep insights into sugar, lipids, and overall health impact."
+              title: t('ai_analysis'),
+              desc: t('ai_analysis_desc')
             },
             {
               icon: Leaf,
-              title: "Better Habits",
-              desc: "Understand what you eat and improve your diet effortlessly."
+              title: t('better_habits'),
+              desc: t('better_habits_desc')
             }
           ].map((feature, i) => (
             <motion.div

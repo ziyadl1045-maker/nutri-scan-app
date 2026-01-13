@@ -1,17 +1,29 @@
 import { Link, useLocation } from "wouter";
-import { Home, Scan, MessageSquare, User } from "lucide-react";
+import { Home, Scan, MessageSquare, User, Globe } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function BottomNav() {
   const [location] = useLocation();
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   const isActive = (path: string) => location === path;
 
   const navItems = [
-    { path: "/", icon: Home, label: "Home" },
-    { path: "/scan", icon: Scan, label: "Scan" },
-    { path: "/chat", icon: MessageSquare, label: "Ask AI" },
-    { path: "/profile", icon: User, label: "Profile" },
+    { path: "/", icon: Home, label: t('dashboard') },
+    { path: "/scan", icon: Scan, label: t('scan') },
+    { path: "/chat", icon: MessageSquare, label: t('chat') },
+    { path: "/profile", icon: User, label: t('profile') },
   ];
 
   return (
@@ -41,6 +53,26 @@ export function BottomNav() {
             </Link>
           );
         })}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="relative flex flex-col items-center justify-center p-2 group cursor-pointer w-16 outline-none">
+              <Globe className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span className="text-[10px] mt-1 font-medium text-muted-foreground uppercase">{i18n.language.split('-')[0]}</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="mb-2">
+            <DropdownMenuItem onClick={() => changeLanguage('en')}>
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+              Français
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('ar')}>
+              العربية
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
