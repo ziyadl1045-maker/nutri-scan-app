@@ -9,10 +9,54 @@ export default function ProductDetails() {
   const [match, params] = useRoute("/product/:barcode");
   const barcode = match ? params.barcode : null;
   const { data: product, isLoading, error } = useProduct(barcode);
+  
+  // Real health score calculation (simplified Nutri-Score logic)
+  const calculateScore = (p: any) => {
+    if (!p || !p.nutriments) return 0;
+    
+    let points = 0;
+    const n = p.nutriments;
+    
+    // Negative points (bad)
+    const energy = p.calories || 0;
+    if (energy > 800) points += 10;
+    else if (energy > 160) points += Math.floor(energy / 80);
+    
+    const sugars = parseFloat(n.sugars) || 0;
+    if (sugars > 45) points += 10;
+    else if (sugars > 4.5) points += Math.floor(sugars / 4.5);
+    
+    const satFat = parseFloat(n['saturated-fat']) || 0;
+    if (satFat > 10) points += 10;
+    else if (satFat > 1) points += Math.floor(satFat / 1);
+    
+    const salt = parseFloat(n.salt) || 0;
+    if (salt > 0.9) points += 10;
+    else if (salt > 0.1) points += Math.floor(salt / 0.1);
+    
+    // Positive points (good)
+    const proteins = parseFloat(n.proteins) || 0;
+    const fiber = parseFloat(n.fiber) || 0;
+    
+    const goodPoints = Math.min(5, Math.floor(proteins / 1.6)) + Math.min(5, Math.floor(fiber / 0.9));
+    
+    const finalScore = points - goodPoints;
+    
+    // Map to 0-100 scale (inverted because finalScore is higher for bad products)
+    // Nutri-Score ranges from -15 (best) to 40 (worst)
+    // Let's normalize: 0 is worst, 100 is best
+    return Math.max(0, Math.min(100, 100 - (finalScore + 15) * 2));
+  };
 
-  // Mock score derivation (since backend logic is hidden)
-  // In real app, this comes from backend
-  const score = product ? Math.floor(Math.random() * 90) + 10 : 0; 
+  const score = calculateScore(product);
+
+  const getRecommendation = (s: number) => {
+    if (s >= 80) return "Excellent product! You can enjoy this daily.";
+    if (s >= 60) return "Good choice for a balanced diet.";
+    if (s >= 40) return "Moderate. Try to consume this occasionally.";
+    if (s >= 20) return "Poor nutritional quality. Limit your consumption.";
+    return "Very poor. Better to find a healthier alternative.";
+  };
 
   if (isLoading) {
     return (
@@ -62,7 +106,12 @@ export default function ProductDetails() {
         </div>
 
         {/* Gauge */}
-        <HealthGauge score={score} />
+        <div className="space-y-2">
+          <HealthGauge score={score} />
+          <p className="text-center text-sm font-medium text-slate-600 px-4">
+            {getRecommendation(score)}
+          </p>
+        </div>
 
         {/* Nutrients Grid */}
         <div>
