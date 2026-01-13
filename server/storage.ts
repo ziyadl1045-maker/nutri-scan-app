@@ -1,10 +1,12 @@
-import { users, type User } from "@shared/schema";
+import { users, type User, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  getScanHistory(userId: string): Promise<ScanHistory[]>;
+  createScanEntry(entry: InsertScanHistory): Promise<ScanHistory>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -20,6 +22,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async getScanHistory(userId: string): Promise<ScanHistory[]> {
+    return await db
+      .select()
+      .from(scanHistory)
+      .where(eq(scanHistory.userId, userId))
+      .orderBy(desc(scanHistory.createdAt));
+  }
+
+  async createScanEntry(entry: InsertScanHistory): Promise<ScanHistory> {
+    const [newEntry] = await db
+      .insert(scanHistory)
+      .values(entry)
+      .returning();
+    return newEntry;
   }
 }
 

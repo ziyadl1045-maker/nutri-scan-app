@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, varchar, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
@@ -16,6 +16,26 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
+
+export const scanHistory = pgTable("scan_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  barcode: varchar("barcode").notNull(),
+  productName: text("product_name").notNull(),
+  brand: text("brand"),
+  imageUrl: text("image_url"),
+  nutriments: jsonb("nutriments"),
+  calories: integer("calories"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertScanHistorySchema = createInsertSchema(scanHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ScanHistory = typeof scanHistory.$inferSelect;
+export type InsertScanHistory = z.infer<typeof insertScanHistorySchema>;
 
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,

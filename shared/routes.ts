@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { users } from './models/auth';
+import { scanHistory } from './models/chat';
 
 export const errorSchemas = {
   validation: z.object({
@@ -38,6 +39,14 @@ export const api = {
         401: errorSchemas.internal,
       },
     },
+    scans: {
+      method: 'GET' as const,
+      path: '/api/profile/scans',
+      responses: {
+        200: z.array(z.custom<typeof scanHistory.$inferSelect>()),
+        401: errorSchemas.internal,
+      },
+    },
   },
   products: {
     lookup: {
@@ -50,6 +59,7 @@ export const api = {
           nutriments: z.record(z.any()).optional(),
           additives: z.array(z.string()).optional(),
           calories: z.number().optional(),
+          image_url: z.string().optional(),
           isAI: z.boolean().optional(),
         }),
         404: errorSchemas.notFound,
@@ -68,6 +78,7 @@ export const api = {
           nutriments: z.record(z.any()).optional(),
           additives: z.array(z.string()).optional(),
           calories: z.number().optional(),
+          image_url: z.string().optional(),
           isAI: z.boolean().optional(),
         }),
       },

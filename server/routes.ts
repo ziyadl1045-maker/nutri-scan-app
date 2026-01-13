@@ -25,6 +25,12 @@ export async function registerRoutes(
     res.json(user);
   });
 
+  app.get(api.profile.scans.path, isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const history = await storage.getScanHistory(userId);
+    res.json(history);
+  });
+
   app.patch(api.profile.update.path, isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -44,8 +50,10 @@ export async function registerRoutes(
   });
 
   // Product Lookup (Proxy to OpenFoodFacts)
-  app.get(api.products.lookup.path, async (req, res) => {
+  app.get(api.products.lookup.path, async (req: any, res) => {
     const { barcode } = req.params;
+    const userId = req.isAuthenticated() ? req.user.claims.sub : null;
+    
     try {
       // Use OpenFoodFacts API (free, no key)
       const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
@@ -58,14 +66,29 @@ export async function registerRoutes(
       }
       
       const product = data.product;
-      res.json({
+      const productData = {
         name: product.product_name || "Unknown Product",
         brand: product.brands,
         nutriments: product.nutriments,
         image_url: product.image_url,
         additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
         calories: product.nutriments?.['energy-kcal_100g'],
-      });
+      };
+
+      // Save to history if user is logged in
+      if (userId) {
+        await storage.createScanEntry({
+          userId,
+          barcode,
+          productName: productData.name,
+          brand: productData.brand,
+          imageUrl: productData.image_url,
+          nutriments: productData.nutriments,
+          calories: productData.calories ? Math.round(Number(productData.calories)) : null,
+        });
+      }
+
+      res.json(productData);
     } catch (error) {
       console.error("OpenFoodFacts error:", error);
       res.status(500).json({ message: "Failed to fetch product data" });
