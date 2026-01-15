@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useConversations, useCreateConversation, useConversation, useChatStream } from "@/hooks/use-chat";
 import { BottomNav } from "@/components/BottomNav";
-import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Menu, History } from "lucide-react";
+import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Menu, History, Mic, MicOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 // Helper for file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -144,8 +145,74 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
   const { sendMessage, streamingContent, isStreaming } = useChatStream(conversationId);
   const [input, setInput] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "fr-FR"; // Support French as requested
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = "";
+        let finalTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        if (finalTranscript) {
+          setInput(prev => prev + (prev ? " " : "") + finalTranscript);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+        if (event.error !== "no-speech") {
+          toast({
+            title: "Error",
+            description: "Could not access microphone.",
+            variant: "destructive"
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, [toast]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      if (!recognitionRef.current) {
+        toast({
+          title: "Not Supported",
+          description: "Your browser doesn't support speech recognition.",
+          variant: "destructive"
+        });
+        return;
+      }
+      setInput("");
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
 
   const messages = conversation?.messages || [];
 
@@ -170,11 +237,12 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
     if ((!input.trim() && !selectedImage) || isStreaming) return;
     
-    // The current sendMessage hook probably only accepts content.
-    // I need to check useChatStream implementation in @/hooks/use-chat.ts
-    // For now I will assume I can pass an object or I will update the hook.
     sendMessage(input, selectedImage); 
     setInput("");
     setSelectedImage(null);
@@ -257,6 +325,18 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
             placeholder="Ask about your diet..."
             className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
           />
+          <button 
+            type="button"
+            onClick={toggleListening}
+            className={`p-3 rounded-xl transition-all ${
+              isListening 
+                ? "bg-red-500 text-white animate-pulse" 
+                : "bg-gray-50 text-slate-600 hover:bg-gray-100"
+            }`}
+            title={isListening ? "Arrêter de dicter" : "Dicter"}
+          >
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
           <button 
             type="submit" 
             disabled={(!input.trim() && !selectedImage) || isStreaming}
