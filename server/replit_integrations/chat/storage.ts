@@ -37,6 +37,16 @@ export const chatStorage: IChatStorage = {
 
   async createMessage(conversationId: number, role: string, content: string) {
     const [message] = await db.insert(messages).values({ conversationId, role, content }).returning();
+    
+    // Update conversation title if it's the first user message
+    if (role === "user") {
+      const allMessages = await db.select().from(messages).where(eq(messages.conversationId, conversationId));
+      if (allMessages.length === 1) {
+        const title = content.length > 30 ? content.substring(0, 30) + "..." : content;
+        await db.update(conversations).set({ title }).where(eq(conversations.id, conversationId));
+      }
+    }
+    
     return message;
   },
 };
