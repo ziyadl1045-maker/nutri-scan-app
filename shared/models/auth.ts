@@ -15,7 +15,10 @@ export const sessions = pgTable(
 // User storage table.
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: varchar("username").unique(),
   email: varchar("email").unique(),
+  password: text("password"),
+  fullName: varchar("full_name"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   // New profile fields
