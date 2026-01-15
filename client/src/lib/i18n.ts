@@ -39,7 +39,10 @@ const resources = {
       "profile_updated": "Profile updated",
       "profile_saved_desc": "Your information has been saved.",
       "scan_any_barcode_title": "Scan Product",
-      "analyze_barcodes": "Analyze barcodes instantly"
+      "analyze_barcodes": "Analyze barcodes instantly",
+      "enter_barcode": "Enter barcode manually",
+      "manual": "Manual",
+      "analyze": "Analyze"
     }
   },
   fr: {
@@ -78,7 +81,10 @@ const resources = {
       "profile_updated": "Profil mis à jour",
       "profile_saved_desc": "Vos informations ont été enregistrées.",
       "scan_any_barcode_title": "Scanner un produit",
-      "analyze_barcodes": "Analysez les codes-barres instantanément"
+      "analyze_barcodes": "Analysez les codes-barres instantanément",
+      "enter_barcode": "Entrer le code-barres manuellement",
+      "manual": "Clavier",
+      "analyze": "Analyser"
     }
   },
   ar: {
@@ -117,7 +123,10 @@ const resources = {
       "profile_updated": "تم تحديث الملف الشخصي",
       "profile_saved_desc": "تم حفظ معلوماتك بنجاح.",
       "scan_any_barcode_title": "مسح المنتج",
-      "analyze_barcodes": "تحليل الباركود فوراً"
+      "analyze_barcodes": "تحليل الباركود فوراً",
+      "enter_barcode": "أدخل الرمز الشريطي يدوياً",
+      "manual": "يدوي",
+      "analyze": "تحليل"
     }
   }
 };
