@@ -92,7 +92,7 @@ export default function Dashboard() {
               <p className="text-muted-foreground">{t('no_scans_yet') || 'No scans yet'}</p>
             </div>
           ) : (
-            scans?.slice(0, 5).map((scan: any) => (
+            scans?.slice(0, 10).map((scan: any) => (
               <Link key={scan.id} href={`/product/${scan.barcode}`}>
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
