@@ -72,30 +72,35 @@ export async function registerRoutes(
       // Map Nutri-Score (-15 to 40) to 0-100 scale if available
       // Otherwise fallback to calculation in frontend
       let calculatedHealthScore = null;
-      if (scoreValue !== null) {
-        calculatedHealthScore = Math.max(0, Math.min(100, 100 - (scoreValue + 15) * (100 / 55)));
+      if (scoreValue !== undefined && scoreValue !== null) {
+        calculatedHealthScore = Math.max(0, Math.min(100, 100 - (Number(scoreValue) + 15) * (100 / 55)));
       }
 
       // If product name is unknown or missing key data, try to enhance it with AI specifically for Moroccan context
       let enhancedName = product.product_name || "Unknown Product";
-      if (!product.product_name || product.product_name === "Unknown Product" || !product.brands) {
+      let aiNutriments = null;
+      let aiCalories = null;
+
+      if (!product.product_name || product.product_name === "Unknown Product" || !product.brands || !product.nutriments || Object.keys(product.nutriments).length < 3) {
         try {
           const aiResponse = await openai.chat.completions.create({
-            model: "gpt-4o", // Higher quality model for better results
+            model: "gpt-4o",
             messages: [
               {
                 role: "system",
-                content: "You are a Moroccan food expert. Given a barcode, identify the Moroccan product and its brand. If you don't know the specific barcode, but recognize the number range for Morocco (611), estimate what it could be. Return JSON: { name, brand }. Focus on all types of Moroccan products including dairy, snacks, chips, biscuits, and beverages."
+                content: "You are a Moroccan food expert. Identify the product from the barcode. If it's Moroccan (barcode starts with 611), be precise. Also provide accurate nutritional facts per 100g if missing. Return JSON: { name, brand, nutriments: { sugars, fat, proteins, salt }, calories }."
               },
               {
                 role: "user",
-                content: `Barcode: ${barcode}`
+                content: `Barcode: ${barcode}. Current data: ${JSON.stringify({ name: product.product_name, brand: product.brands })}`
               }
             ],
             response_format: { type: "json_object" }
           });
           const aiData = JSON.parse(aiResponse.choices[0].message.content || "{}");
           if (aiData.name) enhancedName = aiData.name;
+          if (aiData.nutriments) aiNutriments = aiData.nutriments;
+          if (aiData.calories) aiCalories = aiData.calories;
         } catch (e) {
           console.error("AI Enhancement error:", e);
         }
@@ -104,10 +109,10 @@ export async function registerRoutes(
       const productData = {
         name: enhancedName,
         brand: product.brands || "Unknown Brand",
-        nutriments: nutriments,
+        nutriments: aiNutriments || nutriments,
         image_url: product.image_url,
         additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
-        calories: nutriments['energy-kcal_100g'],
+        calories: aiCalories || nutriments['energy-kcal_100g'],
         healthScore: calculatedHealthScore,
         nutriscore: product.nutriscore_grade,
       };
