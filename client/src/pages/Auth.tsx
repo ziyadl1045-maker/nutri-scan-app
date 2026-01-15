@@ -16,8 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl,FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Leaf } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import logoImage from "@assets/generated_images/professional_logo_for_nutriscan_app..png";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -75,9 +76,9 @@ export default function AuthPage() {
         className="w-full max-w-md z-10"
       >
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2 text-primary font-bold text-2xl">
-            <Leaf className="w-8 h-8" />
-            <span>NutriScan</span>
+          <div className="flex flex-col items-center gap-2">
+            <img src={logoImage} alt="NutriScan Logo" className="w-20 h-20 rounded-2xl shadow-lg mb-2" />
+            <div className="text-primary font-bold text-2xl">NutriScan</div>
           </div>
         </div>
 

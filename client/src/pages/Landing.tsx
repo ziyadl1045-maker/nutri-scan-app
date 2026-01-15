@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { ArrowRight, Leaf, ShieldCheck, Zap, Globe } from "lucide-react";
 import { motion } from "framer-motion";
-import { SiGoogle, SiApple } from "react-icons/si";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import logoImage from "@assets/generated_images/professional_logo_for_nutriscan_app..png";
 
 export default function Landing() {
   const { t, i18n } = useTranslation();
@@ -56,6 +56,9 @@ export default function Landing() {
           transition={{ duration: 0.6 }}
           className="text-center space-y-6"
         >
+          <div className="flex justify-center mb-4">
+            <img src={logoImage} alt="NutriScan Logo" className="w-24 h-24 rounded-2xl shadow-xl" />
+          </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm">
             <Leaf className="w-4 h-4" />
             <span>{t('instant_scanning')}</span>
