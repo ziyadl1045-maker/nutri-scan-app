@@ -92,7 +92,7 @@ export function registerChatRoutes(app: Express): void {
 
       // Stream response from OpenAI
       const stream = await openai.chat.completions.create({
-        model: "gpt-4o-mini", // Better model for vision and general reasoning
+        model: "gpt-4o", // Changed from gpt-4o-mini to gpt-4o for better Moroccan context
         messages: chatMessages,
         stream: true,
         max_completion_tokens: 2048,
