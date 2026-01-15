@@ -55,23 +55,6 @@ export function useCreateConversation() {
   });
 }
 
-export function useDeleteConversation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/conversations/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to delete conversation");
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-    },
-  });
-}
-
 export function useChatStream(conversationId: number) {
   const queryClient = useQueryClient();
   const [streamingContent, setStreamingContent] = useState("");

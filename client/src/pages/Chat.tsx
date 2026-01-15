@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { useConversations, useCreateConversation, useConversation, useChatStream, useDeleteConversation } from "@/hooks/use-chat";
+import { useConversations, useCreateConversation, useConversation, useChatStream } from "@/hooks/use-chat";
 import { BottomNav } from "@/components/BottomNav";
-import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Menu, History, Mic, MicOff, Trash2 } from "lucide-react";
+import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
 
 // Helper for file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -19,52 +17,26 @@ const fileToBase64 = (file: File): Promise<string> => {
 export default function ChatPage() {
   const { data: conversations, isLoading: isLoadingConvos } = useConversations();
   const { mutate: createConvo } = useCreateConversation();
-  const { mutate: deleteConvo } = useDeleteConversation();
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Auto-select first conversation or create one if none exist
   useEffect(() => {
     if (conversations && conversations.length > 0 && !activeId) {
       setActiveId(conversations[0].id);
     }
-  }, [conversations, activeId]);
+  }, [conversations]);
 
   const handleNewChat = () => {
     createConvo("New Consultation", {
-      onSuccess: (data) => {
-        setActiveId(data.id);
-        setIsHistoryOpen(false);
-      },
+      onSuccess: (data) => setActiveId(data.id),
     });
-  };
-
-  const handleDeleteChat = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    if (confirm("Voulez-vous vraiment supprimer cette conversation ?")) {
-      deleteConvo(id, {
-        onSuccess: () => {
-          if (activeId === id) {
-            setActiveId(conversations?.find(c => c.id !== id)?.id || null);
-          }
-        }
-      });
-    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
       {/* Header */}
-      <div className="bg-white px-6 py-4 shadow-sm z-20 flex items-center justify-between sticky top-0">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-slate-600"
-          >
-            <History className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-bold font-display text-slate-900">AI Nutritionist</h1>
-        </div>
+      <div className="bg-white px-6 py-4 shadow-sm z-10 flex items-center justify-between">
+        <h1 className="text-xl font-bold font-display text-slate-900">AI Nutritionist</h1>
         <button 
           onClick={handleNewChat}
           className="p-2 bg-emerald-50 text-primary rounded-full hover:bg-emerald-100 transition"
@@ -73,90 +45,16 @@ export default function ChatPage() {
         </button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar History Overlay */}
-        <AnimatePresence>
-          {isHistoryOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsHistoryOpen(false)}
-                className="absolute inset-0 bg-black/20 z-30"
-              />
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="absolute left-0 top-0 bottom-0 w-72 bg-white z-40 shadow-xl flex flex-col"
-              >
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-emerald-50/30">
-                  <span className="font-semibold text-slate-900">History</span>
-                  <button onClick={() => setIsHistoryOpen(false)} className="p-1 hover:bg-gray-200 rounded">
-                    <X className="w-4 h-4 text-slate-500" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                  {conversations?.map((convo) => (
-                    <div
-                      key={convo.id}
-                      onClick={() => {
-                        setActiveId(convo.id);
-                        setIsHistoryOpen(false);
-                      }}
-                      className={`group w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 cursor-pointer ${
-                        activeId === convo.id
-                          ? "bg-primary text-white shadow-md shadow-primary/20"
-                          : "hover:bg-gray-100 text-slate-700"
-                      }`}
-                    >
-                      <MessageSquare className={`w-4 h-4 shrink-0 ${activeId === convo.id ? "text-white" : "text-emerald-500"}`} />
-                      <div className="flex-1 truncate">
-                        <p className="text-sm font-medium truncate">{convo.title}</p>
-                        <p className={`text-[10px] ${activeId === convo.id ? "text-emerald-50" : "text-slate-400"}`}>
-                          {format(new Date(convo.createdAt), "MMM d, h:mm a")}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => handleDeleteChat(e, convo.id)}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          activeId === convo.id
-                            ? "hover:bg-white/20 text-white"
-                            : "hover:bg-red-50 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
-                        }`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4 border-t border-gray-100">
-                  <button
-                    onClick={handleNewChat}
-                    className="w-full flex items-center justify-center gap-2 p-3 bg-primary/10 text-primary rounded-xl font-medium hover:bg-primary/20 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    New Consultation
-                  </button>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        <div className="flex-1 overflow-hidden relative">
-          {activeId ? (
-            <ChatWindow conversationId={activeId} key={activeId} />
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-              <Bot className="w-16 h-16 mb-4 text-emerald-200" />
-              <p>Start a new conversation to get advice.</p>
-              <button onClick={handleNewChat} className="mt-4 text-primary font-medium">Start Chat</button>
-            </div>
-          )}
-        </div>
+      <div className="flex-1 overflow-hidden relative">
+        {activeId ? (
+          <ChatWindow conversationId={activeId} key={activeId} />
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+            <Bot className="w-16 h-16 mb-4 text-emerald-200" />
+            <p>Start a new conversation to get advice.</p>
+            <button onClick={handleNewChat} className="mt-4 text-primary font-medium">Start Chat</button>
+          </div>
+        )}
       </div>
 
       <BottomNav />
@@ -169,74 +67,8 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
   const { sendMessage, streamingContent, isStreaming } = useChatStream(conversationId);
   const [input, setInput] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = "fr-FR"; // Support French as requested
-
-      recognition.onresult = (event: any) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-        
-        if (finalTranscript) {
-          setInput(prev => prev + (prev ? " " : "") + finalTranscript);
-        }
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
-        if (event.error !== "no-speech") {
-          toast({
-            title: "Error",
-            description: "Could not access microphone.",
-            variant: "destructive"
-          });
-        }
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-  }, [toast]);
-
-  const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      if (!recognitionRef.current) {
-        toast({
-          title: "Not Supported",
-          description: "Your browser doesn't support speech recognition.",
-          variant: "destructive"
-        });
-        return;
-      }
-      setInput("");
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
-  };
 
   const messages = conversation?.messages || [];
 
@@ -261,12 +93,11 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    }
     if ((!input.trim() && !selectedImage) || isStreaming) return;
     
+    // The current sendMessage hook probably only accepts content.
+    // I need to check useChatStream implementation in @/hooks/use-chat.ts
+    // For now I will assume I can pass an object or I will update the hook.
     sendMessage(input, selectedImage); 
     setInput("");
     setSelectedImage(null);
@@ -349,18 +180,6 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
             placeholder="Ask about your diet..."
             className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
           />
-          <button 
-            type="button"
-            onClick={toggleListening}
-            className={`p-3 rounded-xl transition-all ${
-              isListening 
-                ? "bg-red-500 text-white animate-pulse" 
-                : "bg-gray-50 text-slate-600 hover:bg-gray-100"
-            }`}
-            title={isListening ? "Arrêter de dicter" : "Dicter"}
-          >
-            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
           <button 
             type="submit" 
             disabled={(!input.trim() && !selectedImage) || isStreaming}
