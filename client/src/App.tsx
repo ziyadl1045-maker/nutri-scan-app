@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
+import AuthPage from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import ScanPage from "@/pages/Scan";
 import ProductDetails from "@/pages/ProductDetails";
@@ -25,17 +26,22 @@ function Router() {
     );
   }
 
-  if (!user) {
-    return <Landing />;
-  }
-
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/scan" component={ScanPage} />
-      <Route path="/product/:barcode" component={ProductDetails} />
-      <Route path="/profile" component={ProfilePage} />
-      <Route path="/chat" component={ChatPage} />
+      <Route path="/" component={user ? Dashboard : Landing} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/scan">
+        {!user ? <Landing /> : <ScanPage />}
+      </Route>
+      <Route path="/product/:barcode">
+        {!user ? <Landing /> : <ProductDetails />}
+      </Route>
+      <Route path="/profile">
+        {!user ? <Landing /> : <ProfilePage />}
+      </Route>
+      <Route path="/chat">
+        {!user ? <Landing /> : <ChatPage />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

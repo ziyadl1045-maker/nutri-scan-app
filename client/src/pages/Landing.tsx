@@ -73,20 +73,17 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <a 
-              href="/api/login?provider=google"
-              className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-primary text-primary-foreground font-semibold text-lg shadow-lg shadow-primary/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
-            >
-              <SiGoogle className="w-5 h-5 mr-2" />
-              {t('log_in_google')}
-            </a>
-            <a 
-              href="/api/login?provider=apple"
-              className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-slate-900 text-white font-semibold text-lg shadow-lg shadow-slate-900/25 hover:scale-105 hover:shadow-xl transition-all duration-300"
-            >
-              <SiApple className="w-5 h-5 mr-2" />
-              {t('log_in_apple')}
-            </a>
+            <Link href="/auth">
+              <Button size="lg" className="h-14 px-8 rounded-full text-lg shadow-lg shadow-primary/25 hover:scale-105 transition-all duration-300">
+                Se connecter
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/auth">
+              <Button size="lg" variant="outline" className="h-14 px-8 rounded-full text-lg hover:scale-105 transition-all duration-300">
+                Créer un compte
+              </Button>
+            </Link>
           </div>
         </motion.div>
 
