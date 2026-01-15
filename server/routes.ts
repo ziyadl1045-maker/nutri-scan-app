@@ -76,9 +76,34 @@ export async function registerRoutes(
         calculatedHealthScore = Math.max(0, Math.min(100, 100 - (scoreValue + 15) * (100 / 55)));
       }
 
+      // If product name is unknown or missing key data, try to enhance it with AI specifically for Moroccan context
+      let enhancedName = product.product_name || "Unknown Product";
+      if (!product.product_name || product.product_name === "Unknown Product" || !product.brands) {
+        try {
+          const aiResponse = await openai.chat.completions.create({
+            model: "gpt-4o", // Higher quality model for better results
+            messages: [
+              {
+                role: "system",
+                content: "You are a Moroccan food expert. Given a barcode, identify the Moroccan product and its brand. If you don't know the specific barcode, but recognize the number range for Morocco (611), estimate what it could be. Return JSON: { name, brand }."
+              },
+              {
+                role: "user",
+                content: `Barcode: ${barcode}`
+              }
+            ],
+            response_format: { type: "json_object" }
+          });
+          const aiData = JSON.parse(aiResponse.choices[0].message.content || "{}");
+          if (aiData.name) enhancedName = aiData.name;
+        } catch (e) {
+          console.error("AI Enhancement error:", e);
+        }
+      }
+
       const productData = {
-        name: product.product_name || "Unknown Product",
-        brand: product.brands,
+        name: enhancedName,
+        brand: product.brands || "Unknown Brand",
         nutriments: nutriments,
         image_url: product.image_url,
         additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
@@ -113,11 +138,11 @@ export async function registerRoutes(
       const { name } = api.products.aiLookup.input.parse(req.body);
       
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are a nutrition expert. Provide estimated nutritional facts for the given product in JSON format. Fields: name, brand, sugars (g), fat (g), proteins (g), salt (g), calories (kcal), additives (array of E-codes). All values per 100g."
+            content: "You are a Moroccan nutrition expert. Provide estimated nutritional facts for the given product in JSON format. Fields: name, brand, sugars (g), fat (g), proteins (g), salt (g), calories (kcal), additives (array of E-codes). All values per 100g. Focus on products available in the Moroccan market (Aicha, Dari, Centrale Danone, etc)."
           },
           {
             role: "user",
