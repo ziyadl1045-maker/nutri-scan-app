@@ -1,4 +1,4 @@
-import { users, type User, type UpsertUser, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
+import { users, type User, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
