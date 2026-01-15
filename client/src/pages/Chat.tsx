@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { useConversations, useCreateConversation, useConversation, useChatStream } from "@/hooks/use-chat";
+import { useConversations, useCreateConversation, useConversation, useChatStream, useDeleteConversation } from "@/hooks/use-chat";
 import { BottomNav } from "@/components/BottomNav";
-import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Menu, History, Mic, MicOff } from "lucide-react";
+import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Menu, History, Mic, MicOff, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 export default function ChatPage() {
   const { data: conversations, isLoading: isLoadingConvos } = useConversations();
   const { mutate: createConvo } = useCreateConversation();
+  const { mutate: deleteConvo } = useDeleteConversation();
   const [activeId, setActiveId] = useState<number | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
@@ -36,6 +37,19 @@ export default function ChatPage() {
         setIsHistoryOpen(false);
       },
     });
+  };
+
+  const handleDeleteChat = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (confirm("Voulez-vous vraiment supprimer cette conversation ?")) {
+      deleteConvo(id, {
+        onSuccess: () => {
+          if (activeId === id) {
+            setActiveId(conversations?.find(c => c.id !== id)?.id || null);
+          }
+        }
+      });
+    }
   };
 
   return (
@@ -86,26 +100,36 @@ export default function ChatPage() {
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
                   {conversations?.map((convo) => (
-                    <button
+                    <div
                       key={convo.id}
                       onClick={() => {
                         setActiveId(convo.id);
                         setIsHistoryOpen(false);
                       }}
-                      className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 ${
+                      className={`group w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 cursor-pointer ${
                         activeId === convo.id
                           ? "bg-primary text-white shadow-md shadow-primary/20"
                           : "hover:bg-gray-100 text-slate-700"
                       }`}
                     >
-                      <MessageSquare className={`w-4 h-4 ${activeId === convo.id ? "text-white" : "text-emerald-500"}`} />
+                      <MessageSquare className={`w-4 h-4 shrink-0 ${activeId === convo.id ? "text-white" : "text-emerald-500"}`} />
                       <div className="flex-1 truncate">
                         <p className="text-sm font-medium truncate">{convo.title}</p>
                         <p className={`text-[10px] ${activeId === convo.id ? "text-emerald-50" : "text-slate-400"}`}>
                           {format(new Date(convo.createdAt), "MMM d, h:mm a")}
                         </p>
                       </div>
-                    </button>
+                      <button
+                        onClick={(e) => handleDeleteChat(e, convo.id)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          activeId === convo.id
+                            ? "hover:bg-white/20 text-white"
+                            : "hover:bg-red-50 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
                 <div className="p-4 border-t border-gray-100">
