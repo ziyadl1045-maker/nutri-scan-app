@@ -85,7 +85,7 @@ export async function registerRoutes(
             messages: [
               {
                 role: "system",
-                content: "You are a Moroccan food expert. Given a barcode, identify the Moroccan product and its brand. If you don't know the specific barcode, but recognize the number range for Morocco (611), estimate what it could be. Return JSON: { name, brand }."
+                content: "You are a Moroccan food expert. Given a barcode, identify the Moroccan product and its brand. If you don't know the specific barcode, but recognize the number range for Morocco (611), estimate what it could be. Return JSON: { name, brand }. Focus on all types of Moroccan products including dairy, snacks, chips, biscuits, and beverages."
               },
               {
                 role: "user",
@@ -142,7 +142,7 @@ export async function registerRoutes(
         messages: [
           {
             role: "system",
-            content: "You are a Moroccan nutrition expert. Provide estimated nutritional facts for the given product in JSON format. Fields: name, brand, sugars (g), fat (g), proteins (g), salt (g), calories (kcal), additives (array of E-codes). All values per 100g. Focus on products available in the Moroccan market (Aicha, Dari, Centrale Danone, etc)."
+            content: "You are a Moroccan nutrition expert. Provide estimated nutritional facts for the given product in JSON format. Fields: name, brand, sugars (g), fat (g), proteins (g), salt (g), calories (kcal), additives (array of E-codes). All values per 100g. Focus on products available in the Moroccan market (Aicha, Dari, Centrale Danone, Bimo, Excelo, Henry's, etc) including snacks, chips, and biscuits."
           },
           {
             role: "user",
