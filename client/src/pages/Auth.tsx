@@ -43,8 +43,9 @@ export default function AuthPage() {
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      username: localStorage.getItem("rememberedUsername") || "",
       password: "",
+      rememberMe: !!localStorage.getItem("rememberedUsername"),
     },
   });
 
@@ -71,6 +72,11 @@ export default function AuthPage() {
 
   const onLogin = async (data: z.infer<typeof loginSchema>) => {
     try {
+      if (data.rememberMe) {
+        localStorage.setItem("rememberedUsername", data.username);
+      } else {
+        localStorage.removeItem("rememberedUsername");
+      }
       await login(data);
     } catch (error: any) {
       console.error("Login error:", error);
