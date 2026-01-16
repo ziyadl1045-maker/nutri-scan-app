@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl,FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/generated_images/professional_logo_for_nutriscan_app..png";
 
 const loginSchema = z.object({
@@ -34,6 +35,7 @@ const registerSchema = z.object({
 
 export default function AuthPage() {
   const { login, register, isLoggingIn, isRegistering } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -57,8 +59,13 @@ export default function AuthPage() {
   const onLogin = async (data: z.infer<typeof loginSchema>) => {
     try {
       await login(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Connexion échouée",
+        description: "Nom d'utilisateur ou mot de passe incorrect.",
+      });
     }
   };
 
