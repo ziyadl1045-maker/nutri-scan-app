@@ -191,18 +191,18 @@ export default function AuthPage() {
                         control={loginForm.control}
                         name="rememberMe"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+                          <FormItem className="flex flex-row items-center space-x-2 space-y-0 py-2">
                             <FormControl>
-                              <Checkbox
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                 checked={field.value}
-                                onCheckedChange={field.onChange}
+                                onChange={(e) => field.onChange(e.target.checked)}
                               />
                             </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>
-                                Se souvenir de moi
-                              </FormLabel>
-                            </div>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Se souvenir de moi
+                            </FormLabel>
                           </FormItem>
                         )}
                       />
