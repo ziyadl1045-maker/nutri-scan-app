@@ -20,20 +20,20 @@ export async function registerRoutes(
 
   // Profile Routes
   app.get(api.profile.get.path, isAuthenticated, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.user.id;
     const user = await storage.getUser(userId);
     res.json(user);
   });
 
   app.get(api.profile.scans.path, isAuthenticated, async (req: any, res) => {
-    const userId = req.user.claims.sub;
+    const userId = req.user.id;
     const history = await storage.getScanHistory(userId);
     res.json(history);
   });
 
   app.patch(api.profile.update.path, isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const input = api.profile.update.input.parse(req.body);
       const updated = await storage.updateUser(userId, input);
       res.json(updated);
@@ -52,7 +52,7 @@ export async function registerRoutes(
   // Product Lookup (Proxy to OpenFoodFacts)
   app.get(api.products.lookup.path, async (req: any, res) => {
     const { barcode } = req.params;
-    const userId = req.isAuthenticated() ? req.user.claims.sub : null;
+    const userId = req.isAuthenticated() ? req.user.id : null;
     
     try {
       // Use OpenFoodFacts API (free, no key)

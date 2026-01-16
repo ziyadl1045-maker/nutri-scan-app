@@ -55,11 +55,19 @@ export default function AuthPage() {
   });
 
   const onLogin = async (data: z.infer<typeof loginSchema>) => {
-    await login(data);
+    try {
+      await login(data);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   const onRegister = async (data: z.infer<typeof registerSchema>) => {
-    await register(data);
+    try {
+      await register(data);
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
   };
 
   return (
