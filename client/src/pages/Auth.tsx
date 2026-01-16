@@ -15,7 +15,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl,FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +70,9 @@ export default function AuthPage() {
   const emailValue = registerForm.watch("email");
   useEffect(() => {
     if (emailValue && !registerForm.getValues("username")) {
-      const suggestedUsername = emailValue.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
+      const suggestedUsername = emailValue
+        .split("@")[0]
+        .replace(/[^a-zA-Z0-9]/g, "");
       if (suggestedUsername.length >= 3) {
         registerForm.setValue("username", suggestedUsername);
       }
@@ -81,10 +90,11 @@ export default function AuthPage() {
     } catch (error: any) {
       console.error("Login error:", error);
       let errorMessage = "Nom d'utilisateur ou mot de passe incorrect.";
-      
+
       // Try to extract more specific error from status or response body if available
       if (error.message?.includes("401")) {
-        errorMessage = "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.";
+        errorMessage =
+          "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.";
       }
 
       toast({
@@ -106,13 +116,15 @@ export default function AuthPage() {
           toast({
             variant: "destructive",
             title: "Registration Failed",
-            description: body.message || "Please check your details and try again.",
+            description:
+              body.message || "Please check your details and try again.",
           });
         } catch (e) {
           toast({
             variant: "destructive",
             title: "Registration Failed",
-            description: "An account with this email or username already exists.",
+            description:
+              "An account with this email or username already exists.",
           });
         }
       } else {
@@ -140,24 +152,36 @@ export default function AuthPage() {
       >
         <div className="flex justify-center mb-8">
           <div className="flex flex-col items-center gap-2">
-            <img src={logoImage} alt="NutriScan Logo" className="w-20 h-20 rounded-2xl shadow-lg mb-2" />
+            <img
+              src={logoImage}
+              alt="NutriScan Logo"
+              className="w-20 h-20 rounded-2xl shadow-lg mb-2"
+            />
             <div className="text-primary font-bold text-2xl">NutriScan</div>
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="login">Connexion</TabsTrigger>
             <TabsTrigger value="register">Inscription</TabsTrigger>
           </TabsList>
-          
+
           <motion.div
             key={activeTab}
             initial={{ x: 10, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.2 }}
           >
-            <TabsContent value="login" forceMount className={activeTab === "login" ? "" : "hidden"}>
+            <TabsContent
+              value="login"
+              forceMount
+              className={activeTab === "login" ? "" : "hidden"}
+            >
               <Card>
                 <CardHeader>
                   <CardTitle>Connexion</CardTitle>
@@ -167,7 +191,10 @@ export default function AuthPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                    <form
+                      onSubmit={loginForm.handleSubmit(onLogin)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={loginForm.control}
                         name="username"
@@ -188,7 +215,11 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Mot de passe</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input
+                                type="password"
+                                placeholder="••••••••"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -204,7 +235,9 @@ export default function AuthPage() {
                                 type="checkbox"
                                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                 checked={field.value}
-                                onChange={(e) => field.onChange(e.target.checked)}
+                                onChange={(e) =>
+                                  field.onChange(e.target.checked)
+                                }
                               />
                             </FormControl>
                             <FormLabel className="font-normal cursor-pointer">
@@ -213,8 +246,14 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full" disabled={isLoggingIn}>
-                        {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoggingIn}
+                      >
+                        {isLoggingIn && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         Se connecter
                       </Button>
                     </form>
@@ -223,7 +262,11 @@ export default function AuthPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="register" forceMount className={activeTab === "register" ? "" : "hidden"}>
+            <TabsContent
+              value="register"
+              forceMount
+              className={activeTab === "register" ? "" : "hidden"}
+            >
               <Card>
                 <CardHeader>
                   <CardTitle>Créer un compte</CardTitle>
@@ -233,7 +276,10 @@ export default function AuthPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                    <form
+                      onSubmit={registerForm.handleSubmit(onRegister)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={registerForm.control}
                         name="fullName"
@@ -254,7 +300,11 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="jean@exemple.com" {...field} />
+                              <Input
+                                type="email"
+                                placeholder="jean@exemple.com"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -280,14 +330,24 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Mot de passe</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
+                              <Input
+                                type="password"
+                                placeholder="••••••••"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full" disabled={isRegistering}>
-                        {isRegistering && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isRegistering}
+                      >
+                        {isRegistering && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         S'inscrire
                       </Button>
                     </form>
