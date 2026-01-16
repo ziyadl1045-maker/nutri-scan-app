@@ -9,12 +9,20 @@ export function registerAuthRoutes(app: Express): void {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`Attempting login for username: ${username}`);
         const user = await storage.getUserByUsername(username);
-        if (!user || user.password !== password) {
-          return done(null, false, { message: "Invalid username or password" });
+        if (!user) {
+          console.log(`Login failed: User ${username} not found`);
+          return done(null, false, { message: "Utilisateur non trouvé" });
         }
+        if (user.password !== password) {
+          console.log(`Login failed: Incorrect password for user ${username}`);
+          return done(null, false, { message: "Mot de passe incorrect" });
+        }
+        console.log(`Login successful for user: ${username}`);
         return done(null, user);
       } catch (error) {
+        console.error("Login strategy error:", error);
         return done(error);
       }
     })

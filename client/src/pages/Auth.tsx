@@ -80,10 +80,17 @@ export default function AuthPage() {
       await login(data);
     } catch (error: any) {
       console.error("Login error:", error);
+      let errorMessage = "Nom d'utilisateur ou mot de passe incorrect.";
+      
+      // Try to extract more specific error from status or response body if available
+      if (error.message?.includes("401")) {
+        errorMessage = "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.";
+      }
+
       toast({
         variant: "destructive",
         title: "Connexion échouée",
-        description: "Nom d'utilisateur ou mot de passe incorrect.",
+        description: errorMessage,
       });
     }
   };
