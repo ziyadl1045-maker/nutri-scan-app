@@ -19,11 +19,13 @@ import { Form, FormControl,FormField, FormItem, FormLabel, FormMessage } from "@
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import logoImage from "@assets/generated_images/professional_logo_for_nutriscan_app..png";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().default(false),
 });
 
 const registerSchema = z.object({
@@ -176,6 +178,25 @@ export default function AuthPage() {
                               <Input type="password" placeholder="••••••••" {...field} />
                             </FormControl>
                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="rememberMe"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>
+                                Se souvenir de moi
+                              </FormLabel>
+                            </div>
                           </FormItem>
                         )}
                       />
