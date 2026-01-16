@@ -33,6 +33,11 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(400).json({ message: "Username already exists" });
       }
 
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
       const user = await storage.createUser({
         username,
         email,
