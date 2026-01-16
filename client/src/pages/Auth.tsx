@@ -102,43 +102,38 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute -top-[20%] -right-[20%] w-[80%] h-[80%] bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-[40%] -left-[20%] w-[60%] h-[60%] bg-emerald-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute -top-[20%] -right-[20%] w-[80%] h-[80%] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-[40%] -left-[20%] w-[60%] h-[60%] bg-emerald-200/20 rounded-full blur-3xl" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
         className="w-full max-w-md z-10"
       >
         <div className="flex justify-center mb-8">
-          <motion.div 
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="flex flex-col items-center gap-2"
-          >
-            <img src={logoImage} alt="NutriScan Logo" className="w-24 h-24 rounded-3xl shadow-2xl mb-2 border-4 border-white dark:border-zinc-800" />
-            <div className="text-primary font-black text-3xl tracking-tight">NutriScan</div>
-          </motion.div>
+          <div className="flex flex-col items-center gap-2">
+            <img src={logoImage} alt="NutriScan Logo" className="w-20 h-20 rounded-2xl shadow-lg mb-2" />
+            <div className="text-primary font-bold text-2xl">NutriScan</div>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50 p-1 rounded-xl h-12">
-            <TabsTrigger value="login" className="rounded-lg data-[state=active]:shadow-md">Connexion</TabsTrigger>
-            <TabsTrigger value="register" className="rounded-lg data-[state=active]:shadow-md">Inscription</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="login">Connexion</TabsTrigger>
+            <TabsTrigger value="register">Inscription</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
-            <Card className="border-none shadow-none bg-transparent">
-              <CardHeader className="px-0">
-                <CardTitle className="text-2xl">Connexion</CardTitle>
+            <Card>
+              <CardHeader>
+                <CardTitle>Connexion</CardTitle>
                 <CardDescription>
-                  Accédez à votre historique de scan.
+                  Connectez-vous pour accéder à votre historique de scan.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="px-0">
+              <CardContent>
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <FormField
@@ -148,7 +143,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Nom d'utilisateur</FormLabel>
                           <FormControl>
-                            <Input className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" placeholder="votre_pseudo" {...field} />
+                            <Input placeholder="votre_pseudo" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -161,13 +156,13 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Mot de passe</FormLabel>
                           <FormControl>
-                            <Input className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" type="password" placeholder="••••••••" {...field} />
+                            <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full h-11 rounded-xl text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]" disabled={isLoggingIn}>
+                    <Button type="submit" className="w-full" disabled={isLoggingIn}>
                       {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Se connecter
                     </Button>
@@ -178,14 +173,14 @@ export default function AuthPage() {
           </TabsContent>
 
           <TabsContent value="register">
-            <Card className="border-none shadow-none bg-transparent">
-              <CardHeader className="px-0">
-                <CardTitle className="text-2xl">Créer un compte</CardTitle>
+            <Card>
+              <CardHeader>
+                <CardTitle>Créer un compte</CardTitle>
                 <CardDescription>
-                  Commencez à scanner vos produits.
+                  Inscrivez-vous pour commencer à scanner vos produits.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="px-0">
+              <CardContent>
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                     <FormField
@@ -195,7 +190,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Nom complet</FormLabel>
                           <FormControl>
-                            <Input className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" placeholder="Jean Dupont" {...field} />
+                            <Input placeholder="Jean Dupont" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -208,7 +203,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Nom d'utilisateur</FormLabel>
                           <FormControl>
-                            <Input className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" placeholder="pseudo123" {...field} />
+                            <Input placeholder="pseudo123" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -221,7 +216,7 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" type="email" placeholder="jean@exemple.com" {...field} />
+                            <Input type="email" placeholder="jean@exemple.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -234,13 +229,13 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Mot de passe</FormLabel>
                           <FormControl>
-                            <Input className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" type="password" placeholder="••••••••" {...field} />
+                            <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full h-11 rounded-xl text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]" disabled={isRegistering}>
+                    <Button type="submit" className="w-full" disabled={isRegistering}>
                       {isRegistering && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       S'inscrire
                     </Button>
