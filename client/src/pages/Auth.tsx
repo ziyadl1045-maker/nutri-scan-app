@@ -27,6 +27,7 @@ import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLocation } from "wouter";
 import logoImage from "@assets/generated_images/professional_logo_for_nutriscan_app..png";
 
 const loginSchema = z.object({
@@ -45,6 +46,7 @@ const registerSchema = z.object({
 export default function AuthPage() {
   const { login, register, isLoggingIn, isRegistering } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -87,6 +89,7 @@ export default function AuthPage() {
         localStorage.removeItem("rememberedUsername");
       }
       await login(data);
+      setLocation("/scan");
     } catch (error: any) {
       console.error("Login error:", error);
       let errorMessage = "Nom d'utilisateur ou mot de passe incorrect.";
@@ -108,6 +111,7 @@ export default function AuthPage() {
   const onRegister = async (data: z.infer<typeof registerSchema>) => {
     try {
       await register(data);
+      setLocation("/scan");
     } catch (error: any) {
       console.error("Registration error:", error);
       if (error.message?.includes("400")) {
