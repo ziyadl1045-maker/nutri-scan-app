@@ -65,8 +65,30 @@ export default function AuthPage() {
   const onRegister = async (data: z.infer<typeof registerSchema>) => {
     try {
       await register(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      if (error.message?.includes("400")) {
+        try {
+          const body = JSON.parse(error.message.split(": ")[1]);
+          toast({
+            variant: "destructive",
+            title: "Registration Failed",
+            description: body.message || "Please check your details and try again.",
+          });
+        } catch (e) {
+          toast({
+            variant: "destructive",
+            title: "Registration Failed",
+            description: "An account with this email or username already exists.",
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Registration Error",
+          description: "Something went wrong. Please try again later.",
+        });
+      }
     }
   };
 
