@@ -67,6 +67,19 @@ export async function registerRoutes(
       
       const product = data.product;
       const nutriments = product.nutriments || {};
+      
+      // Detailed nutritional mapping for better accuracy
+      const mappedNutriments = {
+        sugars: nutriments.sugars_100g || nutriments.sugars || 0,
+        fat: nutriments.fat_100g || nutriments.fat || 0,
+        proteins: nutriments.proteins_100g || nutriments.proteins || 0,
+        salt: nutriments.salt_100g || nutriments.salt || 0,
+        saturated_fat: nutriments['saturated-fat_100g'] || nutriments['saturated-fat'] || 0,
+        fiber: nutriments.fiber_100g || nutriments.fiber || 0,
+        sodium: nutriments.sodium_100g || nutriments.sodium || 0,
+        energy_kcal: nutriments['energy-kcal_100g'] || nutriments['energy-kcal'] || 0,
+      };
+
       const scoreValue = product.nutriscore_score !== undefined ? product.nutriscore_score : null;
       
       // Map Nutri-Score (-15 to 40) to 0-100 scale if available
@@ -109,10 +122,10 @@ export async function registerRoutes(
       const productData = {
         name: enhancedName,
         brand: product.brands || "Unknown Brand",
-        nutriments: aiNutriments || nutriments,
+        nutriments: mappedNutriments,
         image_url: product.image_url,
         additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
-        calories: aiCalories || nutriments['energy-kcal_100g'],
+        calories: Math.round(Number(mappedNutriments.energy_kcal)),
         healthScore: calculatedHealthScore,
         nutriscore: product.nutriscore_grade,
       };

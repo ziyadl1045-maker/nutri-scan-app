@@ -173,33 +173,33 @@ export default function ProductDetails() {
           <h3 className="text-lg font-bold text-slate-900 mb-4">Nutritional Breakdown</h3>
           <div className="grid grid-cols-2 gap-4">
             <NutrientCard 
-              label="Sugars" 
-              value={`${Math.round(displayProduct.nutriments?.sugars || 0)}g`} 
-              status={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "Too High" : "Reasonable"}
+              label="Sucres" 
+              value={`${(displayProduct.nutriments?.sugars || 0).toFixed(1)}g`} 
+              status={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "Trop élevé" : "Raisonnable"}
               color={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "red" : "green"}
             />
-             <NutrientCard 
-              label="Fat" 
-              value={`${Math.round(displayProduct.nutriments?.fat || 0)}g`} 
-              status={parseFloat(displayProduct.nutriments?.fat) > 15 ? "High" : "Moderate"}
+            <NutrientCard 
+              label="Lipides" 
+              value={`${(displayProduct.nutriments?.fat || 0).toFixed(1)}g`} 
+              status={parseFloat(displayProduct.nutriments?.fat) > 15 ? "Élevé" : "Modéré"}
               color={parseFloat(displayProduct.nutriments?.fat) > 15 ? "red" : "orange"}
             />
             <NutrientCard 
-              label="Protein" 
-              value={`${Math.round(displayProduct.nutriments?.proteins || 0)}g`} 
-              status="Healthy"
+              label="Protéines" 
+              value={`${(displayProduct.nutriments?.proteins || 0).toFixed(1)}g`} 
+              status="Sain"
               color="green"
             />
             <NutrientCard 
-              label="Salt" 
+              label="Sel" 
               value={`${(displayProduct.nutriments?.salt || 0).toFixed(2)}g`} 
-              status={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "High" : "Low"}
+              status={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "Élevé" : "Faible"}
               color={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "red" : "green"}
             />
             <NutrientCard 
               label="Calories" 
               value={`${Math.round(displayProduct.calories || 0)} kcal`} 
-              status={displayProduct.calories > 400 ? "High" : "Normal"}
+              status={displayProduct.calories > 400 ? "Élevé" : "Normal"}
               color={displayProduct.calories > 400 ? "red" : "green"}
             />
           </div>
