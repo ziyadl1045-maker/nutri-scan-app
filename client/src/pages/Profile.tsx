@@ -29,8 +29,9 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
 
-  const { data: scans, isLoading: isScansLoading } = useQuery({
+  const { data: scans, isLoading: isScansLoading } = useQuery<any[]>({
     queryKey: [api.profile.scans.path],
+    initialData: [],
   });
 
   const getLocale = () => {
@@ -44,25 +45,26 @@ export default function ProfilePage() {
     defaultValues: {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
-      age: 0,
-      gender: "",
-    },
-    values: profile ? {
-      firstName: profile.firstName || "",
-      lastName: profile.lastName || "",
-      age: profile.age || 0,
-      gender: profile.gender || "",
-    } : undefined
+      age: user?.age || 0,
+      gender: user?.gender || "",
+    }
   });
 
   const onSubmit = (data: ProfileFormValues) => {
     updateProfile(data, {
       onSuccess: () => {
         toast({
-          title: t('profile_updated') || "Profile updated",
-          description: t('profile_saved_desc') || "Your information has been saved.",
+          title: "Profil mis à jour",
+          description: "Vos informations ont été enregistrées.",
         });
       },
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de mettre à jour le profil.",
+        });
+      }
     });
   };
 
