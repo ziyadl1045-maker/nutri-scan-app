@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { chatStorage } from "./storage";
 
 export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "dummy",
+  apiKey: "replit", 
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
@@ -92,7 +92,7 @@ export function registerChatRoutes(app: Express): void {
 
       // Stream response from OpenAI
       const stream = await openai.chat.completions.create({
-        model: "gpt-4o", // Changed from gpt-4o-mini to gpt-4o for better Moroccan context
+        model: "gpt-4o-mini", // Use gpt-4o-mini as a safer fallback
         messages: chatMessages,
         stream: true,
         max_completion_tokens: 2048,
