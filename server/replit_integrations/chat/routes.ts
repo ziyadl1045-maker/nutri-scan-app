@@ -3,8 +3,8 @@ import OpenAI from "openai";
 import { chatStorage } from "./storage";
 
 export const openai = new OpenAI({
-  apiKey: "replit", // Dummy key for Replit AI Integrations
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || "https://api.openai.com/v1",
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "dummy",
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
 export function registerChatRoutes(app: Express): void {
