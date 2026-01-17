@@ -51,6 +51,7 @@ export default function AuthPage() {
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
+    mode: "onBlur",
     defaultValues: {
       username: localStorage.getItem("rememberedUsername") || "",
       password: "",
@@ -60,6 +61,7 @@ export default function AuthPage() {
 
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
+    mode: "onChange",
     defaultValues: {
       username: "",
       email: "",
@@ -89,6 +91,10 @@ export default function AuthPage() {
         localStorage.removeItem("rememberedUsername");
       }
       await login(data);
+      toast({
+        title: "Connexion réussie",
+        description: `Ravi de vous revoir, ${data.username} !`,
+      });
       setLocation("/scan");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -111,6 +117,10 @@ export default function AuthPage() {
   const onRegister = async (data: z.infer<typeof registerSchema>) => {
     try {
       await register(data);
+      toast({
+        title: "Compte créé avec succès",
+        description: "Bienvenue sur NutriScan ! Vous pouvez commencer à scanner.",
+      });
       setLocation("/scan");
     } catch (error: any) {
       console.error("Registration error:", error);
