@@ -11,7 +11,7 @@ import { api } from "@shared/routes";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { fr, arSA, enUS } from "date-fns/locale";
 
 const profileSchema = z.object({
@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const { profile, updateProfile, isUpdating, isLoading: isProfileLoading } = useProfile();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
+  const [, setLocation] = useLocation();
 
   const { data: scans, isLoading: isScansLoading } = useQuery<any[]>({
     queryKey: [api.profile.scans.path],
@@ -66,6 +67,23 @@ export default function ProfilePage() {
         });
       }
     });
+  };
+
+  const onLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Déconnexion réussie",
+        description: "À bientôt sur NutriScan !",
+      });
+      setLocation("/auth");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de se déconnecter.",
+      });
+    }
   };
 
   if (isProfileLoading) {
@@ -142,7 +160,7 @@ export default function ProfilePage() {
 
           <div className="mt-8 pt-6 border-t border-gray-100">
             <button 
-              onClick={() => logout()}
+              onClick={onLogout}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-red-500 font-medium hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-5 h-5" />
