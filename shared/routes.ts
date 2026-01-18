@@ -25,6 +25,7 @@ export const api = {
         gender: z.string().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
+        dietaryPreferences: z.array(z.string()).optional(),
       }),
       responses: {
         200: z.custom<typeof users.$inferSelect>(),

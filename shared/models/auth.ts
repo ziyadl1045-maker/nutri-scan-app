@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   age: integer("age"),
   gender: text("gender"), 
   profileImageUrl: varchar("profile_image_url"),
+  dietaryPreferences: text("dietary_preferences").array(), 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

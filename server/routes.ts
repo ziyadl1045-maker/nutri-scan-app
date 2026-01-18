@@ -126,42 +126,31 @@ export async function registerRoutes(
       // Final fallback if both OFF and AI failed
       if (!enhancedName) enhancedName = "Produit inconnu";
 
-      const productData = {
-        name: enhancedName,
-        brand: product.brands || "Unknown Brand",
-        nutriments: mappedNutriments,
-        image_url: product.image_url,
-        additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
-        calories: Math.round(Number(mappedNutriments.energy_kcal)),
-        healthScore: calculatedHealthScore,
-        nutriscore: product.nutriscore_grade,
-        serving_quantity: product.serving_quantity || (product.product_name?.toLowerCase().includes("biscuit") ? 25 : null),
-        alternatives: [], // Will be populated below
-      };
-
-      // Find healthier alternatives using AI if the score is low
-      if (calculatedHealthScore < 70) {
-        try {
-          const altResponse = await openai.chat.completions.create({
+      // Check if product matches user dietary preferences
+      let dietWarnings: string[] = [];
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (user && user.dietaryPreferences && user.dietaryPreferences.length > 0) {
+          const dietResponse = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
               {
                 role: "system",
-                content: "You are a Moroccan nutrition expert. Suggest 3 healthier alternatives for the given product that are commonly available in Moroccan supermarkets (Marjane, Carrefour, Acima). Return JSON: { alternatives: [{ name, brand, healthScore, reason }] }."
+                content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide."
               },
               {
                 role: "user",
-                content: `Product: ${productData.name}, Brand: ${productData.brand}, Score: ${productData.healthScore}`
+                content: `Product: ${enhancedName}, Preferences: ${user.dietaryPreferences.join(', ')}, Data: ${JSON.stringify(productData)}`
               }
             ],
             response_format: { type: "json_object" }
           });
-          const altData = JSON.parse(altResponse.choices[0].message.content || "{}");
-          productData.alternatives = altData.alternatives || [];
-        } catch (e) {
-          console.error("Alternatives AI error:", e);
+          const dietData = JSON.parse(dietResponse.choices[0].message.content || "{}");
+          dietWarnings = dietData.warnings || [];
         }
       }
+
+      productData.dietWarnings = dietWarnings;
 
       // Save to history if user is logged in
       if (userId) {

@@ -258,6 +258,21 @@ export default function ProductDetails() {
           </div>
         )}
 
+        {/* Dietary Warnings */}
+        {displayProduct.dietWarnings && displayProduct.dietWarnings.length > 0 && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-100 space-y-2">
+            <div className="flex items-center gap-2 text-red-700">
+              <Info className="w-5 h-5" />
+              <h3 className="font-bold">Attention Régime</h3>
+            </div>
+            <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
+              {displayProduct.dietWarnings.map((warning: string, idx: number) => (
+                <li key={idx}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* AI Analysis CTA */}
         <Link href="/chat">
           <motion.div 
