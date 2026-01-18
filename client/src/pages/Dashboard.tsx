@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
-import { Scan, ChevronRight, User, Loader2 } from "lucide-react";
+import { Scan, ChevronRight, User, Loader2, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -52,26 +52,42 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Hero Card */}
-        <Link href="/scan">
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-primary rounded-3xl p-6 text-white shadow-lg shadow-emerald-900/20 relative overflow-hidden cursor-pointer group"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/20 transition-colors" />
-            
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">{t('scan') || 'Scan Product'}</h2>
-                <p className="text-emerald-100">{t('analyze_barcodes') || 'Analyze barcodes instantly'}</p>
+        {/* Action Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <Link href="/scan">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-primary rounded-3xl p-6 text-white shadow-lg shadow-emerald-900/20 relative overflow-hidden cursor-pointer group h-full"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl group-hover:bg-white/20 transition-colors" />
+              <div className="relative z-10">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm mb-4">
+                  <Scan className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold mb-1">{t('scan') || 'Scan'}</h2>
+                <p className="text-emerald-100 text-xs">{t('analyze_barcodes') || 'Instant analysis'}</p>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                <Scan className="w-6 h-6 text-white" />
+            </motion.div>
+          </Link>
+
+          <Link href="/chat">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-emerald-600 rounded-3xl p-6 text-white shadow-lg shadow-emerald-900/20 relative overflow-hidden cursor-pointer group h-full"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl group-hover:bg-white/20 transition-colors" />
+              <div className="relative z-10">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm mb-4">
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold mb-1">Expert IA</h2>
+                <p className="text-emerald-100 text-xs">Conseils personnalisés</p>
               </div>
-            </div>
-          </motion.div>
-        </Link>
+            </motion.div>
+          </Link>
+        </div>
       </div>
 
       <div className="px-6 mt-8">

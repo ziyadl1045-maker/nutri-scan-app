@@ -158,11 +158,16 @@ export default function ProductDetails() {
       <div className="px-6 py-8 space-y-8">
         {/* Product Identity */}
         <div className="text-center">
-          <div className="w-24 h-24 bg-white rounded-2xl mx-auto mb-4 shadow-md border border-gray-100 flex items-center justify-center">
+          <div className="relative w-24 h-24 bg-white rounded-2xl mx-auto mb-4 shadow-md border border-gray-100 flex items-center justify-center">
             {displayProduct.image_url ? (
               <img src={displayProduct.image_url} alt={displayProduct.name} className="w-full h-full object-contain rounded-2xl p-2" />
             ) : (
               <span className="text-2xl font-bold text-gray-300">IMG</span>
+            )}
+            {displayProduct.isMoroccan && (
+              <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm flex items-center gap-1">
+                <span>🇲🇦</span> MAROC
+              </div>
             )}
           </div>
           <h2 className="text-2xl font-bold text-slate-900 font-display mb-1">{displayProduct.name}</h2>
@@ -228,6 +233,48 @@ export default function ProductDetails() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Alternatives Section */}
+        {displayProduct.alternatives && displayProduct.alternatives.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-500" />
+              <h3 className="text-lg font-bold text-slate-900">Alternatives plus saines</h3>
+            </div>
+            <div className="space-y-3">
+              {displayProduct.alternatives.map((alt: any, idx: number) => (
+                <div key={idx} className="p-4 bg-white rounded-xl border border-emerald-100 shadow-sm flex items-center justify-between">
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="font-bold text-slate-800 truncate">{alt.name}</p>
+                    <p className="text-xs text-muted-foreground">{alt.brand}</p>
+                    <p className="text-[10px] text-emerald-600 font-medium mt-1 leading-tight">{alt.reason}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-10 h-10 rounded-full border-2 border-emerald-500 flex items-center justify-center text-xs font-bold text-emerald-700 bg-emerald-50">
+                      {Math.round(alt.healthScore)}
+                    </div>
+                    <span className="text-[8px] font-bold text-emerald-600 uppercase">Score</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Dietary Warnings */}
+        {displayProduct.dietWarnings && displayProduct.dietWarnings.length > 0 && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-100 space-y-2">
+            <div className="flex items-center gap-2 text-red-700">
+              <Info className="w-5 h-5" />
+              <h3 className="font-bold">Attention Régime</h3>
+            </div>
+            <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
+              {displayProduct.dietWarnings.map((warning: string, idx: number) => (
+                <li key={idx}>{warning}</li>
+              ))}
+            </ul>
           </div>
         )}
 

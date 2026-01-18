@@ -126,31 +126,71 @@ export async function registerRoutes(
       // Final fallback if both OFF and AI failed
       if (!enhancedName) enhancedName = "Produit inconnu";
 
-      // Check if product matches user dietary preferences
-      let dietWarnings: string[] = [];
-      if (userId) {
-        const user = await storage.getUser(userId);
-        if (user && user.dietaryPreferences && user.dietaryPreferences.length > 0) {
-          const dietResponse = await openai.chat.completions.create({
+      const productData: any = {
+        name: enhancedName,
+        brand: product.brands || "Unknown Brand",
+        nutriments: mappedNutriments,
+        image_url: product.image_url,
+        additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
+        calories: Math.round(Number(mappedNutriments.energy_kcal)),
+        healthScore: calculatedHealthScore,
+        nutriscore: product.nutriscore_grade,
+        serving_quantity: product.serving_quantity || (product.product_name?.toLowerCase().includes("biscuit") ? 25 : null),
+        alternatives: [],
+        dietWarnings: [],
+        isMoroccan: barcode.startsWith("611"),
+      };
+
+      // Find healthier alternatives using AI if the score is low
+      if (calculatedHealthScore !== null && calculatedHealthScore < 70) {
+        try {
+          const altResponse = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
               {
                 role: "system",
-                content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide."
+                content: "You are a Moroccan nutrition expert. Suggest 3 healthier alternatives for the given product that are commonly available in Moroccan supermarkets (Marjane, Carrefour, Acima). Return JSON: { alternatives: [{ name, brand, healthScore, reason }] }."
               },
               {
                 role: "user",
-                content: `Product: ${enhancedName}, Preferences: ${user.dietaryPreferences.join(', ')}, Data: ${JSON.stringify(productData)}`
+                content: `Product: ${productData.name}, Brand: ${productData.brand}, Score: ${productData.healthScore}`
               }
             ],
             response_format: { type: "json_object" }
           });
-          const dietData = JSON.parse(dietResponse.choices[0].message.content || "{}");
-          dietWarnings = dietData.warnings || [];
+          const altData: any = JSON.parse(altResponse.choices[0].message.content || "{}");
+          productData.alternatives = altData.alternatives || [];
+        } catch (e) {
+          console.error("Alternatives AI error:", e);
         }
       }
 
-      productData.dietWarnings = dietWarnings;
+      // Check if product matches user dietary preferences
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (user && user.dietaryPreferences && user.dietaryPreferences.length > 0) {
+          try {
+            const dietResponse = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: [
+                {
+                  role: "system",
+                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide."
+                },
+                {
+                  role: "user",
+                  content: `Product: ${enhancedName}, Preferences: ${user.dietaryPreferences.join(', ')}, Data: ${JSON.stringify(productData)}`
+                }
+              ],
+              response_format: { type: "json_object" }
+            });
+            const dietData: any = JSON.parse(dietResponse.choices[0].message.content || "{}");
+            productData.dietWarnings = dietData.warnings || [];
+          } catch (e) {
+            console.error("Diet Analysis error:", e);
+          }
+        }
+      }
 
       // Save to history if user is logged in
       if (userId) {

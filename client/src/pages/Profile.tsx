@@ -109,6 +109,39 @@ export default function ProfilePage() {
       <div className="max-w-md mx-auto px-6 -mt-8 space-y-6">
         <div className="bg-white p-6 rounded-3xl shadow-lg shadow-slate-200/50">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Dietary Preferences */}
+            <div className="space-y-4 py-4 border-y border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm">Préférences Alimentaires</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'halal', label: 'Halal' },
+                  { id: 'vegan', label: 'Végan' },
+                  { id: 'sans_gluten', label: 'Sans Gluten' },
+                  { id: 'diabetique', label: 'Diabétique' },
+                  { id: 'allergie_arachide', label: 'Allergie Arachides' }
+                ].map((diet) => (
+                  <button
+                    key={diet.id}
+                    type="button"
+                    onClick={() => {
+                      const current = user?.dietaryPreferences || [];
+                      const updated = current.includes(diet.id)
+                        ? current.filter(id => id !== diet.id)
+                        : [...current, diet.id];
+                      updateProfile({ dietaryPreferences: updated });
+                    }}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                      user?.dietaryPreferences?.includes(diet.id)
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                        : "bg-gray-50 border-gray-100 text-slate-500 hover:border-emerald-200"
+                    }`}
+                  >
+                    {diet.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">{t('first_name') || 'First Name'}</label>
