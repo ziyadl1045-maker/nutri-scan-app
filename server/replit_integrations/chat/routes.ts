@@ -68,6 +68,13 @@ export function registerChatRoutes(app: Express): void {
       // Save user message (content can be text or include image description)
       await chatStorage.createMessage(conversationId, "user", content);
 
+      // Automatically update title if it's a new conversation
+      const conversation = await chatStorage.getConversation(conversationId);
+      if (conversation && (conversation.title === "New Chat" || conversation.title === "New Consultation")) {
+        const newTitle = content.slice(0, 30) + (content.length > 30 ? "..." : "");
+        await chatStorage.updateConversationTitle(conversationId, newTitle);
+      }
+
       // Get conversation history for context
       const messages = await chatStorage.getMessagesByConversation(conversationId);
       const chatMessages: any[] = messages.map((m) => ({

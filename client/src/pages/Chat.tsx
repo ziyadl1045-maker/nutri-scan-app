@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { useConversations, useCreateConversation, useConversation, useChatStream } from "@/hooks/use-chat";
+import { useConversations, useCreateConversation, useConversation, useChatStream, useDeleteConversation } from "@/hooks/use-chat";
 import { BottomNav } from "@/components/BottomNav";
-import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X } from "lucide-react";
+import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Trash2, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 // Helper for file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -17,7 +18,9 @@ const fileToBase64 = (file: File): Promise<string> => {
 export default function ChatPage() {
   const { data: conversations, isLoading: isLoadingConvos } = useConversations();
   const { mutate: createConvo } = useCreateConversation();
+  const { mutate: deleteConvo } = useDeleteConversation();
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Auto-select first conversation or create one if none exist
   useEffect(() => {
@@ -28,33 +31,138 @@ export default function ChatPage() {
 
   const handleNewChat = () => {
     createConvo("New Consultation", {
-      onSuccess: (data) => setActiveId(data.id),
+      onSuccess: (data) => {
+        setActiveId(data.id);
+        setShowHistory(false);
+      },
+    });
+  };
+
+  const handleDeleteChat = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    deleteConvo(id, {
+      onSuccess: () => {
+        if (activeId === id) {
+          setActiveId(null);
+        }
+      }
     });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 overflow-hidden h-screen">
       {/* Header */}
-      <div className="bg-white px-6 py-4 shadow-sm z-10 flex items-center justify-between">
-        <h1 className="text-xl font-bold font-display text-slate-900">AI Nutritionist</h1>
-        <button 
+      <div className="bg-white px-6 py-4 shadow-sm z-20 flex items-center justify-between border-b">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-slate-600"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <h1 className="text-xl font-bold font-display text-slate-900">Expert Nutrition AI</h1>
+        </div>
+        <Button 
           onClick={handleNewChat}
-          className="p-2 bg-emerald-50 text-primary rounded-full hover:bg-emerald-100 transition"
+          size="icon"
+          variant="ghost"
+          className="bg-emerald-50 text-primary hover:bg-emerald-100 rounded-full"
         >
           <Plus className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
 
-      <div className="flex-1 overflow-hidden relative">
-        {activeId ? (
-          <ChatWindow conversationId={activeId} key={activeId} />
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-            <Bot className="w-16 h-16 mb-4 text-emerald-200" />
-            <p>Start a new conversation to get advice.</p>
-            <button onClick={handleNewChat} className="mt-4 text-primary font-medium">Start Chat</button>
-          </div>
-        )}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* History Sidebar - Animated Overlay for Mobile */}
+        <AnimatePresence>
+          {showHistory && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowHistory(false)}
+                className="absolute inset-0 bg-black/20 z-30"
+              />
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute inset-y-0 left-0 w-4/5 max-w-xs bg-white z-40 shadow-xl flex flex-col"
+              >
+                <div className="p-4 border-b flex items-center justify-between bg-gray-50/50">
+                  <span className="font-semibold text-slate-700">Historique des chats</span>
+                  <Button variant="ghost" size="icon" onClick={() => setShowHistory(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {conversations?.map((convo) => (
+                    <div
+                      key={convo.id}
+                      onClick={() => {
+                        setActiveId(convo.id);
+                        setShowHistory(false);
+                      }}
+                      className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                        activeId === convo.id 
+                          ? "bg-emerald-50 text-emerald-700" 
+                          : "hover:bg-gray-100 text-slate-600"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${activeId === convo.id ? "text-emerald-500" : "text-slate-400"}`} />
+                        <span className="truncate text-sm font-medium">{convo.title}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleDeleteChat(e, convo.id)}
+                        className="opacity-0 group-hover:opacity-100 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {(!conversations || conversations.length === 0) && (
+                    <div className="text-center py-8 text-slate-400 text-sm italic">
+                      Aucun historique
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 border-t">
+                  <Button 
+                    onClick={handleNewChat}
+                    className="w-full gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Nouvelle consultation
+                  </Button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        <div className="flex-1 overflow-hidden">
+          {activeId ? (
+            <ChatWindow conversationId={activeId} key={activeId} />
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+                <Bot className="w-10 h-10 text-emerald-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Bienvenue sur votre assistant IA</h3>
+              <p className="max-w-xs mx-auto">Commencez une nouvelle conversation pour obtenir des conseils nutritionnels personnalisés.</p>
+              <Button onClick={handleNewChat} className="mt-6 px-8 rounded-full">
+                Commencer
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <BottomNav />
