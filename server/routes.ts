@@ -90,18 +90,22 @@ export async function registerRoutes(
       }
 
       // If product name is unknown or missing key data, try to enhance it with AI specifically for Moroccan context
-      let enhancedName = product.product_name || "Unknown Product";
+      let enhancedName = product.product_name || "";
       let aiNutriments = null;
       let aiCalories = null;
 
-      if (!product.product_name || product.product_name === "Unknown Product" || !product.brands || !product.nutriments || Object.keys(product.nutriments).length < 3) {
+      // If we don't have a name from OFF, we MUST get it from AI
+      // If we have a name but it's very generic (like "Product"), we can try to improve it
+      const isGenericName = !enhancedName || enhancedName.toLowerCase().includes("unknown") || enhancedName.length < 3;
+
+      if (isGenericName || !product.brands || !product.nutriments || Object.keys(product.nutriments).length < 3) {
         try {
           const aiResponse = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
               {
                 role: "system",
-                content: "You are a Moroccan food expert. Identify the product from the barcode. If it's Moroccan (barcode starts with 611), be precise. Also provide accurate nutritional facts per 100g if missing. Return JSON: { name, brand, nutriments: { sugars, fat, proteins, salt }, calories }."
+                content: "You are a Moroccan food expert. Identify the product precisely from the barcode. If it's a known product in Morocco, provide its exact common name and brand. Do not return generic or random names. Return JSON: { name, brand, nutriments: { sugars, fat, proteins, salt }, calories }."
               },
               {
                 role: "user",
@@ -111,13 +115,16 @@ export async function registerRoutes(
             response_format: { type: "json_object" }
           });
           const aiData = JSON.parse(aiResponse.choices[0].message.content || "{}");
-          if (aiData.name) enhancedName = aiData.name;
+          if (aiData.name && aiData.name.length > 2) enhancedName = aiData.name;
           if (aiData.nutriments) aiNutriments = aiData.nutriments;
           if (aiData.calories) aiCalories = aiData.calories;
         } catch (e) {
           console.error("AI Enhancement error:", e);
         }
       }
+
+      // Final fallback if both OFF and AI failed
+      if (!enhancedName) enhancedName = "Produit inconnu";
 
       const productData = {
         name: enhancedName,
