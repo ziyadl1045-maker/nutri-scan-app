@@ -129,6 +129,18 @@ export default function ProductDetails() {
   }
 
   const displayProduct = currentProduct;
+  const servingSize = displayProduct?.serving_quantity || 100;
+  const multiplier = servingSize / 100;
+
+  const getNutrientValue = (val: any) => {
+    const num = parseFloat(val) || 0;
+    return (num * multiplier).toFixed(1);
+  };
+
+  const getCalories = (val: any) => {
+    const num = parseFloat(val) || 0;
+    return Math.round(num * multiplier);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -139,7 +151,7 @@ export default function ProductDetails() {
             <ArrowLeft className="w-6 h-6 text-slate-800" />
           </div>
         </Link>
-        <h1 className="font-bold text-slate-800">Product Analysis</h1>
+        <h1 className="font-bold text-slate-800">Analyse du Produit</h1>
         <Share2 className="w-6 h-6 text-slate-800" />
       </div>
 
@@ -147,17 +159,17 @@ export default function ProductDetails() {
         {/* Product Identity */}
         <div className="text-center">
           <div className="w-24 h-24 bg-white rounded-2xl mx-auto mb-4 shadow-md border border-gray-100 flex items-center justify-center">
-            {/* Placeholder for product image if not available */}
-             <span className="text-2xl font-bold text-gray-300">IMG</span>
+            {displayProduct.image_url ? (
+              <img src={displayProduct.image_url} alt={displayProduct.name} className="w-full h-full object-contain rounded-2xl p-2" />
+            ) : (
+              <span className="text-2xl font-bold text-gray-300">IMG</span>
+            )}
           </div>
           <h2 className="text-2xl font-bold text-slate-900 font-display mb-1">{displayProduct.name}</h2>
-          <p className="text-muted-foreground">{displayProduct.brand || "Unknown Brand"}</p>
-          {displayProduct.isAI && (
-            <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider border border-amber-100">
-              <Info className="w-3 h-3" />
-              AI Estimate
-            </div>
-          )}
+          <p className="text-muted-foreground">{displayProduct.brand || "Marque inconnue"}</p>
+          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
+            Valeurs pour {servingSize}g {servingSize !== 100 && "(Portion)"}
+          </div>
         </div>
 
         {/* Gauge */}
@@ -170,37 +182,37 @@ export default function ProductDetails() {
 
         {/* Nutrients Grid */}
         <div>
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Nutritional Breakdown</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-4">Analyse Nutritionnelle</h3>
           <div className="grid grid-cols-2 gap-4">
             <NutrientCard 
               label="Sucres" 
-              value={`${(displayProduct.nutriments?.sugars || 0).toFixed(1)}g`} 
-              status={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "Trop élevé" : "Raisonnable"}
-              color={parseFloat(displayProduct.nutriments?.sugars) > 10 ? "red" : "green"}
+              value={`${getNutrientValue(displayProduct.nutriments?.sugars)}g`} 
+              status={parseFloat(displayProduct.nutriments?.sugars) * multiplier > 10 * multiplier ? "Élevé" : "Raisonnable"}
+              color={parseFloat(displayProduct.nutriments?.sugars) * multiplier > 10 * multiplier ? "red" : "green"}
             />
             <NutrientCard 
               label="Lipides" 
-              value={`${(displayProduct.nutriments?.fat || 0).toFixed(1)}g`} 
-              status={parseFloat(displayProduct.nutriments?.fat) > 15 ? "Élevé" : "Modéré"}
-              color={parseFloat(displayProduct.nutriments?.fat) > 15 ? "red" : "orange"}
+              value={`${getNutrientValue(displayProduct.nutriments?.fat)}g`} 
+              status={parseFloat(displayProduct.nutriments?.fat) * multiplier > 15 * multiplier ? "Élevé" : "Modéré"}
+              color={parseFloat(displayProduct.nutriments?.fat) * multiplier > 15 * multiplier ? "red" : "orange"}
             />
             <NutrientCard 
               label="Protéines" 
-              value={`${(displayProduct.nutriments?.proteins || 0).toFixed(1)}g`} 
+              value={`${getNutrientValue(displayProduct.nutriments?.proteins)}g`} 
               status="Sain"
               color="green"
             />
             <NutrientCard 
               label="Sel" 
-              value={`${(displayProduct.nutriments?.salt || 0).toFixed(2)}g`} 
-              status={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "Élevé" : "Faible"}
-              color={parseFloat(displayProduct.nutriments?.salt) > 1.5 ? "red" : "green"}
+              value={`${(parseFloat(displayProduct.nutriments?.salt || 0) * multiplier).toFixed(2)}g`} 
+              status={parseFloat(displayProduct.nutriments?.salt) * multiplier > 1.5 * multiplier ? "Élevé" : "Faible"}
+              color={parseFloat(displayProduct.nutriments?.salt) * multiplier > 1.5 * multiplier ? "red" : "green"}
             />
             <NutrientCard 
               label="Calories" 
-              value={`${Math.round(displayProduct.calories || 0)} kcal`} 
-              status={displayProduct.calories > 400 ? "Élevé" : "Normal"}
-              color={displayProduct.calories > 400 ? "red" : "green"}
+              value={`${getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal)} kcal`} 
+              status={getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal) > 400 * multiplier ? "Élevé" : "Normal"}
+              color={getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal) > 400 * multiplier ? "red" : "green"}
             />
           </div>
         </div>

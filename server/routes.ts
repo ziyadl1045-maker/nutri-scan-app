@@ -135,6 +135,7 @@ export async function registerRoutes(
         calories: Math.round(Number(mappedNutriments.energy_kcal)),
         healthScore: calculatedHealthScore,
         nutriscore: product.nutriscore_grade,
+        serving_quantity: product.serving_quantity || (product.product_name?.toLowerCase().includes("biscuit") ? 25 : null),
       };
 
       // Save to history if user is logged in
