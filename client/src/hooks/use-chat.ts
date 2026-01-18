@@ -70,6 +70,8 @@ export function useDeleteConversation() {
     },
   });
 }
+
+export function useChatStream(conversationId: number) {
   const queryClient = useQueryClient();
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -77,8 +79,6 @@ export function useDeleteConversation() {
   const sendMessage = async (content: string, imageUrl?: string | null) => {
     setIsStreaming(true);
     setStreamingContent(""); // Reset stream buffer
-
-    // Optimistically update UI could happen here if we passed a callback
     
     try {
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
