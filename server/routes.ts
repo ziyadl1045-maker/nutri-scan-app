@@ -194,15 +194,20 @@ export async function registerRoutes(
 
       // Save to history if user is logged in
       if (userId) {
-        await storage.createScanEntry({
-          userId,
-          barcode,
-          productName: productData.name,
-          brand: productData.brand,
-          imageUrl: productData.image_url,
-          nutriments: productData.nutriments,
-          calories: productData.calories ? Math.round(Number(productData.calories)) : null,
-        });
+        try {
+          await storage.createScanEntry({
+            userId,
+            barcode,
+            productName: productData.name,
+            brand: productData.brand,
+            imageUrl: productData.image_url,
+            nutriments: productData.nutriments,
+            calories: productData.calories ? Math.round(Number(productData.calories)) : null,
+            dietWarnings: productData.dietWarnings,
+          });
+        } catch (e) {
+          console.error("Error saving scan history:", e);
+        }
       }
 
       res.json(productData);

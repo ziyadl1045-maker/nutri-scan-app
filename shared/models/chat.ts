@@ -26,6 +26,7 @@ export const scanHistory = pgTable("scan_history", {
   imageUrl: text("image_url"),
   nutriments: jsonb("nutriments"),
   calories: integer("calories"),
+  dietWarnings: text("diet_warnings").array(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
