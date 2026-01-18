@@ -136,7 +136,32 @@ export async function registerRoutes(
         healthScore: calculatedHealthScore,
         nutriscore: product.nutriscore_grade,
         serving_quantity: product.serving_quantity || (product.product_name?.toLowerCase().includes("biscuit") ? 25 : null),
+        alternatives: [], // Will be populated below
       };
+
+      // Find healthier alternatives using AI if the score is low
+      if (calculatedHealthScore < 70) {
+        try {
+          const altResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "You are a Moroccan nutrition expert. Suggest 3 healthier alternatives for the given product that are commonly available in Moroccan supermarkets (Marjane, Carrefour, Acima). Return JSON: { alternatives: [{ name, brand, healthScore, reason }] }."
+              },
+              {
+                role: "user",
+                content: `Product: ${productData.name}, Brand: ${productData.brand}, Score: ${productData.healthScore}`
+              }
+            ],
+            response_format: { type: "json_object" }
+          });
+          const altData = JSON.parse(altResponse.choices[0].message.content || "{}");
+          productData.alternatives = altData.alternatives || [];
+        } catch (e) {
+          console.error("Alternatives AI error:", e);
+        }
+      }
 
       // Save to history if user is logged in
       if (userId) {
