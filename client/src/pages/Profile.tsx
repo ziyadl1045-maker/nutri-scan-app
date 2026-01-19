@@ -19,6 +19,7 @@ const profileSchema = z.object({
   lastName: z.string().optional(),
   age: z.coerce.number().min(0).max(120),
   gender: z.string().optional(),
+  dietaryPreferences: z.array(z.string()).default([]),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -48,6 +49,7 @@ export default function ProfilePage() {
       lastName: user?.lastName || "",
       age: user?.age || 0,
       gender: user?.gender || "",
+      dietaryPreferences: user?.dietaryPreferences || [],
     }
   });
 
@@ -124,14 +126,14 @@ export default function ProfilePage() {
                     key={diet.id}
                     type="button"
                     onClick={() => {
-                      const current = user?.dietaryPreferences || [];
+                      const current = form.getValues("dietaryPreferences") || [];
                       const updated = current.includes(diet.id)
                         ? current.filter(id => id !== diet.id)
                         : [...current, diet.id];
-                      updateProfile({ dietaryPreferences: updated });
+                      form.setValue("dietaryPreferences", updated, { shouldDirty: true });
                     }}
                     className={`p-3 rounded-xl border text-xs font-bold transition-all ${
-                      user?.dietaryPreferences?.includes(diet.id)
+                      form.watch("dietaryPreferences")?.includes(diet.id)
                         ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
                         : "bg-gray-50 border-gray-100 text-slate-500 hover:border-emerald-200"
                     }`}
