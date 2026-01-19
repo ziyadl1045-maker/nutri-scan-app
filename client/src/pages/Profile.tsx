@@ -4,16 +4,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, LogOut, ChevronRight, Scan, Trash2 } from "lucide-react";
+import { Loader2, LogOut, ChevronRight, Scan } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "wouter";
 import { fr, arSA, enUS } from "date-fns/locale";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -35,16 +34,6 @@ export default function ProfilePage() {
   const { data: scans, isLoading: isScansLoading } = useQuery<any[]>({
     queryKey: [api.profile.scans.path],
     initialData: [],
-  });
-
-  const deleteScanMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `${api.profile.scans.path}/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.profile.scans.path] });
-      toast({ title: "Scan supprimé" });
-    },
   });
 
   const getLocale = () => {
@@ -248,19 +237,7 @@ export default function ProfilePage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          deleteScanMutation.mutate(scan.id);
-                        }}
-                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <ChevronRight className={`w-4 h-4 text-gray-300 group-hover:text-primary transition-colors ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
-                    </div>
+                    <ChevronRight className={`w-4 h-4 text-gray-300 group-hover:text-primary transition-colors ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
                   </motion.div>
                 </Link>
               ))

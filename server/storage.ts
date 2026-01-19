@@ -50,13 +50,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(scanHistory.createdAt));
   }
 
-  async deleteScanEntry(id: number, userId: string): Promise<void> {
-    await db
-      .delete(scanHistory)
-      .where(eq(scanHistory.id, id))
-      .where(eq(scanHistory.userId, userId));
-  }
-
   async createScanEntry(entry: InsertScanHistory): Promise<ScanHistory> {
     const [newEntry] = await db
       .insert(scanHistory)
