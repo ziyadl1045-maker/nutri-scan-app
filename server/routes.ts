@@ -175,11 +175,11 @@ export async function registerRoutes(
               messages: [
                 {
                   role: "system",
-                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide. For 'halal' preference: explicitly warn if ingredients contain pork (porc), lard, or gelatin not specified as halal."
+                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide. For 'halal' preference: explicitly warn if ingredients contain pork (porc), lard, or gelatin not specified as halal. If the product name or ingredients clearly contain pork, YOU MUST return a warning."
                 },
                 {
                   role: "user",
-                  content: `Product: ${enhancedName}, Preferences: ${user.dietaryPreferences.join(', ')}, Data: ${JSON.stringify(productData)}`
+                  content: `Product: ${enhancedName}, Brand: ${productData.brand}, Ingredients: ${product.ingredients_text || "N/A"}, Preferences: ${user.dietaryPreferences.join(', ')}, Data: ${JSON.stringify(productData)}`
                 }
               ],
               response_format: { type: "json_object" }
