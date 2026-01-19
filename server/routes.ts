@@ -149,17 +149,20 @@ export async function registerRoutes(
             messages: [
               {
                 role: "system",
-                content: "You are a Moroccan nutrition expert. Suggest 3 healthier alternatives for the given product that are commonly available in Moroccan supermarkets (Marjane, Carrefour, Acima). Return JSON: { alternatives: [{ name, brand, healthScore, reason }] }."
+                content: "You are a Moroccan nutrition expert. Suggest 3 healthier alternatives for the given product that are commonly available in Moroccan supermarkets (Marjane, Carrefour, Acima, BIM). Focus on better Nutri-Score alternatives. Return JSON: { alternatives: [{ name, brand, healthScore, reason }] }."
               },
               {
                 role: "user",
-                content: `Product: ${productData.name}, Brand: ${productData.brand}, Score: ${productData.healthScore}`
+                content: `Product: ${productData.name}, Brand: ${productData.brand}, Score: ${productData.healthScore}, Type: ${product.categories || "Food"}`
               }
             ],
             response_format: { type: "json_object" }
           });
           const altData: any = JSON.parse(altResponse.choices[0].message.content || "{}");
-          productData.alternatives = altData.alternatives || [];
+          productData.alternatives = (altData.alternatives || []).map((a: any) => ({
+            ...a,
+            healthScore: a.healthScore || 80
+          }));
         } catch (e) {
           console.error("Alternatives AI error:", e);
         }
