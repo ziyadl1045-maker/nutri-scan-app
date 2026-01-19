@@ -49,6 +49,21 @@ export async function registerRoutes(
     }
   });
 
+  app.delete(`${api.profile.scans.path}/:id`, isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const scanId = parseInt(req.params.id);
+      const success = await storage.deleteScanEntry(scanId, userId);
+      if (success) {
+        res.json({ message: "Scan deleted" });
+      } else {
+        res.status(404).json({ message: "Scan not found" });
+      }
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Product Lookup (Proxy to OpenFoodFacts)
   app.get(api.products.lookup.path, async (req: any, res) => {
     const { barcode } = req.params;

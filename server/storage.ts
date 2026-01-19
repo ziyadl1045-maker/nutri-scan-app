@@ -57,6 +57,15 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return newEntry;
   }
+
+  async deleteScanEntry(id: number, userId: string): Promise<boolean> {
+    const [deleted] = await db
+      .delete(scanHistory)
+      .where(eq(scanHistory.id, id))
+      .where(eq(scanHistory.userId, userId))
+      .returning();
+    return !!deleted;
+  }
 }
 
 export const storage = new DatabaseStorage();

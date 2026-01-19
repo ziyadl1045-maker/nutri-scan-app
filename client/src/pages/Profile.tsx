@@ -4,15 +4,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, LogOut, ChevronRight, Scan } from "lucide-react";
+import { Loader2, LogOut, ChevronRight, Scan, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "wouter";
 import { fr, arSA, enUS } from "date-fns/locale";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -34,6 +35,19 @@ export default function ProfilePage() {
   const { data: scans, isLoading: isScansLoading } = useQuery<any[]>({
     queryKey: [api.profile.scans.path],
     initialData: [],
+  });
+
+  const deleteScanMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `${api.profile.scans.path}/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.profile.scans.path] });
+      toast({
+        title: "Scan supprimé",
+        description: "Le produit a été retiré de votre historique.",
+      });
+    },
   });
 
   const getLocale = () => {
@@ -216,30 +230,42 @@ export default function ProfilePage() {
               <p className="text-center text-muted-foreground py-4 text-sm">{t('no_scans_yet') || 'No scans yet'}</p>
             ) : (
               scans?.map((scan: any) => (
-                <Link key={scan.id} href={`/product/${scan.barcode}`}>
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-between group cursor-pointer border-b border-slate-50 pb-4 last:border-0 last:pb-0"
+                <div key={scan.id} className="flex items-center gap-2 group border-b border-slate-50 pb-4 last:border-0 last:pb-0">
+                  <Link href={`/product/${scan.barcode}`} className="flex-1">
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden">
+                          {scan.imageUrl ? (
+                            <img src={scan.imageUrl} alt={scan.productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <Scan className="text-slate-300 w-5 h-5" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{scan.productName}</h4>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true, locale: getLocale() })}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 text-gray-300 group-hover:text-primary transition-colors ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
+                    </motion.div>
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteScanMutation.mutate(scan.id);
+                    }}
+                    disabled={deleteScanMutation.isPending}
+                    className="p-2 text-slate-300 hover:text-red-500 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden">
-                        {scan.imageUrl ? (
-                          <img src={scan.imageUrl} alt={scan.productName} className="w-full h-full object-cover" />
-                        ) : (
-                          <Scan className="text-slate-300 w-5 h-5" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{scan.productName}</h4>
-                        <p className="text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true, locale: getLocale() })}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-300 group-hover:text-primary transition-colors ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
-                  </motion.div>
-                </Link>
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               ))
             )}
           </div>
