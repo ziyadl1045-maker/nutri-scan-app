@@ -170,6 +170,10 @@ export async function registerRoutes(
         const user = await storage.getUser(userId);
         if (user && user.dietaryPreferences && user.dietaryPreferences.length > 0) {
           try {
+            // Priority check for pork/halal
+            const isHalalPref = user.dietaryPreferences.includes('halal');
+            const hasPorkTerms = (enhancedName + " " + (product.ingredients_text || "") + " " + (productData.brand || "")).toLowerCase().match(/porc|pork|lard|bacon|ham|jambon|pig|cochon|swine/);
+            
             const dietResponse = await openai.chat.completions.create({
               model: "gpt-4o",
               messages: [
@@ -186,6 +190,11 @@ export async function registerRoutes(
             });
             const dietData: any = JSON.parse(dietResponse.choices[0].message.content || "{}");
             productData.dietWarnings = dietData.warnings || [];
+
+            // Hardcode check if AI missed it
+            if (isHalalPref && hasPorkTerms && !productData.dietWarnings.some((w: string) => w.toLowerCase().includes('halal') || w.toLowerCase().includes('porc') || w.toLowerCase().includes('pork'))) {
+              productData.dietWarnings.push("Attention : Ce produit contient du porc, ce qui est incompatible avec votre régime Halal.");
+            }
           } catch (e) {
             console.error("Diet Analysis error:", e);
           }
