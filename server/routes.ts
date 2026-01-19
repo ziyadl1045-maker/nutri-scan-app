@@ -25,10 +25,15 @@ export async function registerRoutes(
     res.json(user);
   });
 
-  app.get(api.profile.scans.path, isAuthenticated, async (req: any, res) => {
-    const userId = req.user.id;
-    const history = await storage.getScanHistory(userId);
-    res.json(history);
+  app.delete(`${api.profile.scans.path}/:id`, isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      await storage.deleteScanEntry(parseInt(id), userId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   app.patch(api.profile.update.path, isAuthenticated, async (req: any, res) => {
