@@ -282,14 +282,14 @@ export default function ProductDetails() {
 
         {/* Dietary Warnings */}
         {displayProduct.dietWarnings && displayProduct.dietWarnings.length > 0 && (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-100 space-y-2">
-            <div className="flex items-center gap-2 text-red-700">
-              <Info className="w-5 h-5" />
+          <div className="p-4 rounded-xl bg-red-600 border border-red-700 shadow-lg shadow-red-900/20 space-y-2 animate-pulse">
+            <div className="flex items-center gap-2 text-white">
+              <Info className="w-5 h-5 fill-white text-red-600" />
               <h3 className="font-bold">Attention Régime</h3>
             </div>
-            <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
+            <ul className="list-disc list-inside text-sm text-red-50 space-y-1">
               {displayProduct.dietWarnings.map((warning: string, idx: number) => (
-                <li key={idx}>{warning}</li>
+                <li key={idx} className="font-semibold">{warning}</li>
               ))}
             </ul>
           </div>

@@ -175,7 +175,7 @@ export async function registerRoutes(
               messages: [
                 {
                   role: "system",
-                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide."
+                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide. For 'halal' preference: explicitly warn if ingredients contain pork (porc), lard, or gelatin not specified as halal."
                 },
                 {
                   role: "user",
