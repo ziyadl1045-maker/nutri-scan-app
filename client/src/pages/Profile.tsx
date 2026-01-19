@@ -32,6 +32,11 @@ export default function ProfilePage() {
   const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
 
+  const { data: scans, isLoading: isScansLoading } = useQuery<any[]>({
+    queryKey: [api.profile.scans.path],
+    initialData: [],
+  });
+
   const deleteScanMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `${api.profile.scans.path}/${id}`);
