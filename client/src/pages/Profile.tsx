@@ -41,8 +41,10 @@ export default function ProfilePage() {
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `${api.profile.scans.path}/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.profile.scans.path] });
+    onSuccess: (_, deletedId) => {
+      queryClient.setQueryData([api.profile.scans.path], (old: any[] | undefined) => {
+        return old?.filter(scan => scan.id !== deletedId) || [];
+      });
       toast({
         title: "Scan supprimé",
         description: "Le produit a été retiré de votre historique.",
