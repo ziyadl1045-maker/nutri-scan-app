@@ -190,18 +190,19 @@ export async function registerRoutes(
           try {
             // Priority check for pork/halal
             const isHalalPref = user.dietaryPreferences.includes('halal');
-            const hasPorkTerms = (enhancedName + " " + (product.ingredients_text || "") + " " + (productData.brand || "")).toLowerCase().match(/porc|pork|lard|bacon|ham|jambon|pig|cochon|swine/);
+            const productText = (enhancedName + " " + (product.ingredients_text || "") + " " + (productData.brand || "") + " " + (product.categories || "")).toLowerCase();
+            const hasPorkTerms = productText.match(/porc|pork|lard|bacon|ham|jambon|pig|cochon|swine|gelatine|gélatine|larder|e441|e471|e472|e120/);
             
             const dietResponse = await openai.chat.completions.create({
               model: "gpt-4o",
               messages: [
                 {
                   role: "system",
-                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide. For 'halal' preference: explicitly warn if ingredients contain pork (porc), lard, or gelatin not specified as halal. If the product name or ingredients clearly contain pork, YOU MUST return a warning."
+                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide. For 'halal' preference: explicitly warn if ingredients contain pork (porc), lard, or gelatin not specified as halal. If the product name or ingredients clearly contain pork or pig derivatives, YOU MUST return a clear warning in French."
                 },
                 {
                   role: "user",
-                  content: `Product: ${enhancedName}, Brand: ${productData.brand}, Ingredients: ${product.ingredients_text || "N/A"}, Preferences: ${user.dietaryPreferences.join(', ')}, Data: ${JSON.stringify(productData)}`
+                  content: `Product: ${enhancedName}, Brand: ${productData.brand}, Ingredients: ${product.ingredients_text || "N/A"}, Categories: ${product.categories || "N/A"}, Preferences: ${user.dietaryPreferences.join(', ')}`
                 }
               ],
               response_format: { type: "json_object" }
@@ -209,9 +210,12 @@ export async function registerRoutes(
             const dietData: any = JSON.parse(dietResponse.choices[0].message.content || "{}");
             productData.dietWarnings = dietData.warnings || [];
 
-            // Hardcode check if AI missed it
-            if (isHalalPref && hasPorkTerms && !productData.dietWarnings.some((w: string) => w.toLowerCase().includes('halal') || w.toLowerCase().includes('porc') || w.toLowerCase().includes('pork'))) {
-              productData.dietWarnings.push("Attention : Ce produit contient du porc, ce qui est incompatible avec votre régime Halal.");
+            // Hardcode check if AI missed it or for safety
+            if (isHalalPref && hasPorkTerms) {
+              const warningMsg = "Attention : Ce produit contient du porc ou des ingrédients suspects, ce qui est incompatible avec votre régime Halal.";
+              if (!productData.dietWarnings.includes(warningMsg)) {
+                productData.dietWarnings.push(warningMsg);
+              }
             }
           } catch (e) {
             console.error("Diet Analysis error:", e);
