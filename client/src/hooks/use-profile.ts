@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/routes";
-import { type InsertUser } from "@shared/models/auth";
+import { type UpsertUser } from "@shared/schema";
 
 export function useProfile() {
   const queryClient = useQueryClient();
@@ -16,7 +16,7 @@ export function useProfile() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: Partial<InsertUser>) => {
+    mutationFn: async (data: Partial<UpsertUser>) => {
       const res = await fetch(api.profile.update.path, {
         method: api.profile.update.method,
         headers: { "Content-Type": "application/json" },

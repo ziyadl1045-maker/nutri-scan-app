@@ -1,3 +1,4 @@
+import { and } from "drizzle-orm";
 import { users, type User, type UpsertUser, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -61,8 +62,7 @@ export class DatabaseStorage implements IStorage {
   async deleteScanEntry(id: number, userId: string): Promise<boolean> {
     const [deleted] = await db
       .delete(scanHistory)
-      .where(eq(scanHistory.id, id))
-      .where(eq(scanHistory.userId, userId))
+      .where(and(eq(scanHistory.id, id), eq(scanHistory.userId, userId)))
       .returning();
     return !!deleted;
   }
