@@ -50,7 +50,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 overflow-hidden h-screen">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 overflow-hidden h-screen sm:h-auto">
       {/* Header */}
       <div className="bg-white px-6 py-4 shadow-sm z-20 flex items-center justify-between border-b">
         <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export default function ChatPage() {
         </Button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative min-h-0">
         {/* History Sidebar - Animated Overlay for Mobile */}
         <AnimatePresence>
           {showHistory && (
@@ -212,8 +212,8 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 flex flex-col min-h-0 relative">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {messages.map((msg, i) => (
           <motion.div
             key={i}
@@ -267,7 +267,7 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
           <input 
             type="file" 
             accept="image/*" 
@@ -278,20 +278,20 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 bg-gray-50 text-slate-600 rounded-xl hover:bg-gray-100 transition"
+            className="flex-shrink-0 p-3 bg-gray-50 text-slate-600 rounded-xl hover:bg-gray-100 transition"
           >
             <ImageIcon className="w-5 h-5" />
           </button>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your diet..."
-            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+            placeholder="Posez vos questions..."
+            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition min-w-0"
           />
           <button 
             type="submit" 
             disabled={(!input.trim() && !selectedImage) || isStreaming}
-            className="p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:bg-emerald-600 transition-colors"
+            className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-white rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:bg-emerald-600 transition-all active:scale-95"
           >
             <Send className="w-5 h-5" />
           </button>
