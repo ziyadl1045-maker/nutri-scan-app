@@ -76,5 +76,50 @@
 }
 
 .animate-scan {
-  animation: scan-line 2s linear infinite;
+  @apply animate-[scan-line_2s_linear_infinite];
+}
+
+/* html5-qrcode overrides for better visibility */
+#reader button {
+  background-color: white !important;
+  color: #064e3b !important; /* text-emerald-900 */
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 700 !important;
+  border: none !important;
+  margin: 0.5rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.025em !important;
+}
+
+#reader button:hover {
+  background-color: #f8fafc !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+#reader__status_span {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+#reader__dashboard_section_csr span {
+  color: white !important;
+}
+
+#reader__dashboard_section_csr {
+  color: white !important;
+}
+
+#reader__header_message {
+  color: white !important;
+}
+
+#reader__camera_selection {
+  background-color: white !important;
+  color: #0f172a !important;
+  border-radius: 0.5rem !important;
+  padding: 0.25rem !important;
 }

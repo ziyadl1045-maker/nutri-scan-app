@@ -45,7 +45,7 @@ export default function ScanPage() {
   }, [setLocation]);
 
   return (
-    <div className="min-h-screen bg-black relative flex flex-col">
+    <div className="min-h-screen bg-black relative flex flex-col h-screen sm:h-auto overflow-hidden">
       {/* Header overlay */}
       <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center text-white">
         <button 
