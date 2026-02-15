@@ -128,6 +128,48 @@ const resources = {
       "manual": "يدوي",
       "analyze": "تحليل"
     }
+  },
+  zgh: {
+    translation: {
+      "welcome": "Ecc s tusi, dder yif.",
+      "scan_any_barcode": "Sskan ay koud-bar ad tafid s tusi n AI isisatn n tdusi.",
+      "join_tournaments": "Ddu s tmsizzal, tabaɛ timumi-nnk, sawl d unutrisyunist-nnk.",
+      "log_in_google": "Kcm s Google",
+      "log_in_apple": "Kcm s Apple",
+      "instant_scanning": "Askan aziri",
+      "instant_scanning_desc": "Afu n koud-bar zrb i mlyun n isafarn n ddunit.",
+      "ai_analysis": "Asisat n AI",
+      "ai_analysis_desc": "Ami s tusi n daxl f sskkʷaṛ, lidam d tdusi s umata.",
+      "better_habits": "Timumi yifn",
+      "better_habits_desc": "Fhm ay lli tccid t-ṣṣbu tdusi-nnk.",
+      "dashboard": "Asala",
+      "scan": "Askan",
+      "chat": "Amsawal",
+      "profile": "Amagal",
+      "welcome_back": "Ansuf,",
+      "recent_scans": "Askan n tizi-ad",
+      "view_all": "Ẓr kullu",
+      "no_scans_yet": "Ur illa walu n uskan",
+      "scan_history": "Amazray n uskan",
+      "first_name": "Isem",
+      "last_name": "Isem n twja",
+      "age": "Awttay",
+      "gender": "Anaw",
+      "select": "Sti",
+      "male": "Amaynu",
+      "female": "Tamyunt",
+      "other": "Wayyaḍ",
+      "saving": "Ar issefru...",
+      "save_changes": "Ssefru tismmay",
+      "sign_out": "Ffɣ",
+      "profile_updated": "Amagal ittyusmay",
+      "profile_saved_desc": "Tusi-nnk ittyussefru.",
+      "scan_any_barcode_title": "Sskan asafar",
+      "analyze_barcodes": "Ssisat koud-bar imir",
+      "enter_barcode": "Ara koud-bar s ufus",
+      "manual": "Afus",
+      "analyze": "Ssisat"
+    }
   }
 };
 

@@ -55,6 +55,7 @@ export default function ProfilePage() {
   const getLocale = () => {
     if (i18n.language === "fr") return fr;
     if (i18n.language === "ar") return arSA;
+    if (i18n.language === "zgh") return fr; // Fallback to French for Amazigh date formatting for now
     return enUS;
   };
 
