@@ -291,9 +291,9 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
           <button 
             type="submit" 
             disabled={(!input.trim() && !selectedImage) || isStreaming}
-            className="flex-shrink-0 w-14 h-14 flex items-center justify-center bg-primary text-white rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:bg-emerald-600 transition-all active:scale-95 z-50"
+            className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary text-white rounded-xl shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:bg-emerald-600 transition-all active:scale-95 z-50"
           >
-            <Send className="w-6 h-6" />
+            <Send className="w-5 h-5" />
           </button>
         </form>
       </div>
