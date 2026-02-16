@@ -161,6 +161,32 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Language Switcher in Profile */}
+            <div className="space-y-4 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm">Langue / Tutlayt</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'en', label: 'English' },
+                  { id: 'fr', label: 'Français' },
+                  { id: 'ar', label: 'العربية' },
+                  { id: 'zgh', label: 'ⵜⴰⵎⴰⵣⵉⵖⵜ' }
+                ].map((lang) => (
+                  <button
+                    key={lang.id}
+                    type="button"
+                    onClick={() => i18n.changeLanguage(lang.id)}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                      i18n.language === lang.id
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                        : "bg-gray-50 border-gray-100 text-slate-500 hover:border-emerald-200"
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">{t('first_name') || 'First Name'}</label>

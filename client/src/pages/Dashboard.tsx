@@ -1,20 +1,32 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
-import { Scan, ChevronRight, User, Loader2, MessageSquare } from "lucide-react";
+import { Scan, ChevronRight, User, Loader2, MessageSquare, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
 import { fr, arSA, enUS } from "date-fns/locale";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
 
-  const { data: scans, isLoading } = useQuery({
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
+  const { data: scans, isLoading } = useQuery<any[]>({
     queryKey: [api.profile.scans.path],
+    initialData: [],
   });
 
   const getLocale = () => {
@@ -50,6 +62,32 @@ export default function Dashboard() {
               )}
             </div>
           </Link>
+        </div>
+
+        {/* Language Switcher in Dashboard */}
+        <div className="flex justify-end mb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="rounded-full gap-2">
+                <Globe className="h-4 w-4" />
+                <span className="text-xs font-medium uppercase">{i18n.language}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => changeLanguage('en')}>
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+                Français
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLanguage('ar')}>
+                العربية
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLanguage('zgh')}>
+                ⵜⴰⵎⴰⵣⵉⵖⵜ
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Action Cards */}
