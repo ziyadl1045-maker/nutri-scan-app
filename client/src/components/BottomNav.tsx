@@ -158,6 +158,9 @@ export function BottomNav() {
             <DropdownMenuItem onClick={() => changeLanguage('ar')}>
               العربية
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('zgh')}>
+              ⵜⴰⵎⴰⵣⵉⵖⵜ
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
