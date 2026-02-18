@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Trash2, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // Helper for file to base64
 const fileToBase64 = (file: File): Promise<string> => {

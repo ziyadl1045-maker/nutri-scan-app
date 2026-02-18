@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
 import { chatStorage } from "./storage";
+import { storage } from "../../storage";
 
 export const openai = new OpenAI({
   apiKey: "replit",
