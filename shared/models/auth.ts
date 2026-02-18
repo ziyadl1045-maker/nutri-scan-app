@@ -26,6 +26,9 @@ export const users = pgTable("users", {
   gender: text("gender"), 
   profileImageUrl: varchar("profile_image_url"),
   dietaryPreferences: text("dietary_preferences").array(), 
+  subscriptionStatus: varchar("subscription_status").default("free"), // 'free' or 'premium'
+  chatMessagesCount: integer("chat_messages_count").default(0),
+  lastResetDate: timestamp("last_reset_date").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

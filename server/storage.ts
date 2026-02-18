@@ -11,6 +11,8 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   getScanHistory(userId: string): Promise<ScanHistory[]>;
   createScanEntry(entry: InsertScanHistory): Promise<ScanHistory>;
+  incrementChatCount(userId: string): Promise<void>;
+  resetChatCount(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -65,6 +67,20 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(scanHistory.id, id), eq(scanHistory.userId, userId)))
       .returning();
     return !!deleted;
+  }
+
+  async incrementChatCount(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) return;
+    await db.update(users)
+      .set({ chatMessagesCount: (user.chatMessagesCount || 0) + 1 })
+      .where(eq(users.id, userId));
+  }
+
+  async resetChatCount(userId: string): Promise<void> {
+    await db.update(users)
+      .set({ chatMessagesCount: 0, lastResetDate: new Date() })
+      .where(eq(users.id, userId));
   }
 }
 
