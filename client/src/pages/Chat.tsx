@@ -178,6 +178,7 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { toast } = useToast();
   const messages = conversation?.messages || [];
 
   // Scroll to bottom on new messages
@@ -199,16 +200,23 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!input.trim() && !selectedImage) || isStreaming) return;
     
-    // The current sendMessage hook probably only accepts content.
-    // I need to check useChatStream implementation in @/hooks/use-chat.ts
-    // For now I will assume I can pass an object or I will update the hook.
-    sendMessage(input, selectedImage); 
-    setInput("");
-    setSelectedImage(null);
+    try {
+      await sendMessage(input, selectedImage); 
+      setInput("");
+      setSelectedImage(null);
+    } catch (err: any) {
+      if (err.message?.includes("Limit reached") || err.status === 403) {
+        toast({
+          variant: "destructive",
+          title: "Limite atteinte",
+          description: "Vous avez atteint votre limite de 5 messages gratuits par jour. Passez à la version Premium !",
+        });
+      }
+    }
   };
 
   return (

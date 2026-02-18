@@ -122,7 +122,21 @@ export default function ProfilePage() {
           )}
         </div>
         <h1 className="text-2xl font-bold text-slate-900">{user?.firstName} {user?.lastName}</h1>
-        <p className="text-muted-foreground">{user?.email}</p>
+        <p className="text-muted-foreground mb-4">{user?.email}</p>
+        
+        {user?.subscriptionStatus === 'premium' ? (
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
+            <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            Membre Premium
+          </div>
+        ) : (
+          <button 
+            onClick={() => toast({ title: "Bientôt disponible", description: "Le système de paiement sera activé lors du déploiement final." })}
+            className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all"
+          >
+            Passer à la version Premium
+          </button>
+        )}
       </div>
 
       <div className="max-w-md mx-auto px-6 -mt-8 space-y-6">

@@ -65,8 +65,38 @@ export function registerChatRoutes(app: Express): void {
       const conversationId = parseInt(req.params.id);
       const { content, imageUrl } = req.body;
 
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Freemium check: 5 messages per day for free users
+      const FREE_LIMIT = 5;
+      const isPremium = user.subscriptionStatus === "premium";
+      
+      // Reset count if it's a new day
+      const lastReset = user.lastResetDate ? new Date(user.lastResetDate) : new Date(0);
+      const now = new Date();
+      if (lastReset.toDateString() !== now.toDateString()) {
+        await storage.resetChatCount(userId);
+        user.chatMessagesCount = 0;
+      }
+
+      if (!isPremium && (user.chatMessagesCount || 0) >= FREE_LIMIT) {
+        return res.status(403).json({ 
+          error: "Limit reached", 
+          message: "Vous avez atteint la limite quotidienne de 5 messages. Passez à la version Premium pour un accès illimité !" 
+        });
+      }
+
       // Save user message (content can be text or include image description)
       await chatStorage.createMessage(conversationId, "user", content);
+      await storage.incrementChatCount(userId);
 
       // Automatically update title if it's a new conversation
       const conversation = await chatStorage.getConversation(conversationId);
