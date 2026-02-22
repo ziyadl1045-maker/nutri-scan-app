@@ -74,6 +74,9 @@ export async function setupAuth(app: Express) {
     verified: passport.AuthenticateCallback
   ) => {
     const claims = tokens.claims();
+    if (!claims) {
+      return verified(new Error("No claims found in tokens"));
+    }
     const user = { id: claims["sub"] };
     updateUserSession(user, tokens);
     await upsertUser(claims);
