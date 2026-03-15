@@ -44,6 +44,34 @@ Preferred communication style: Simple, everyday language.
 - **conversations**: AI chat conversation metadata
 - **messages**: Individual chat messages linked to conversations
 
+## Mobile App (Android / Play Store)
+
+NutriScan est configuré avec **Capacitor** pour être publié sur le Play Store.
+
+### Configuration Capacitor
+- Config: `capacitor.config.ts` (appId: `ma.nutriscan.app`)
+- Web dir: `dist/public`
+- Plateforme Android: dossier `android/`
+
+### AdMob
+- Plugin: `@capacitor-community/admob`
+- AndroidManifest.xml contient le meta-data AdMob App ID (à remplacer par le vrai ID)
+- IDs de test utilisés en développement
+- Bannières affichées uniquement pour les utilisateurs gratuits (free tier)
+
+### Build Android (à faire localement)
+1. Télécharger le projet complet
+2. Ouvrir `android/` dans Android Studio
+3. Remplacer l'App ID AdMob dans `AndroidManifest.xml` et `capacitor.config.ts`
+4. Build → Generate Signed APK / AAB
+5. Publier sur Google Play Console
+
+### Mise à jour après modifications web
+```bash
+npm run build
+npx cap sync android
+```
+
 ## External Dependencies
 
 ### Third-Party Services
