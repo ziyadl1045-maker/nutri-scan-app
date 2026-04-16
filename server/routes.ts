@@ -18,11 +18,17 @@ export async function registerRoutes(
   registerChatRoutes(app);
   registerImageRoutes(app);
 
+  const sanitizeUser = (user: any) => {
+    if (!user) return user;
+    const { password, ...safe } = user;
+    return safe;
+  };
+
   // Profile Routes
   app.get(api.profile.get.path, isAuthenticated, async (req: any, res) => {
     const userId = req.user.id;
     const user = await storage.getUser(userId);
-    res.json(user);
+    res.json(sanitizeUser(user));
   });
 
   app.get(api.profile.scans.path, isAuthenticated, async (req: any, res) => {
@@ -36,7 +42,7 @@ export async function registerRoutes(
       const userId = req.user.id;
       const input = api.profile.update.input.parse(req.body);
       const updated = await storage.updateUser(userId, input);
-      res.json(updated);
+      res.json(sanitizeUser(updated));
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({
