@@ -215,39 +215,103 @@ export async function registerRoutes(
       if (userId) {
         const user = await storage.getUser(userId);
         if (user && user.dietaryPreferences && user.dietaryPreferences.length > 0) {
-          try {
-            // Priority check for pork/halal
-            const isHalalPref = user.dietaryPreferences.includes('halal');
-            const productText = (enhancedName + " " + (product.ingredients_text || "") + " " + (productData.brand || "") + " " + (product.categories || "")).toLowerCase();
-            const hasPorkTerms = productText.match(/porc|pork|lard|bacon|ham|jambon|pig|cochon|swine|gelatine|gélatine|larder|e441|e471|e472|e120/);
-            
-            const dietResponse = await openai.chat.completions.create({
-              model: "gpt-4o",
-              messages: [
-                {
-                  role: "system",
-                  content: "Compare product ingredients/type with user dietary preferences. Return JSON: { warnings: [string] }. Only warn if there is a conflict. Preferences: halal, vegan, sans_gluten, diabetique, allergie_arachide. For 'halal' preference: explicitly warn if ingredients contain pork (porc), lard, or gelatin not specified as halal. If the product name or ingredients clearly contain pork or pig derivatives, YOU MUST return a clear warning in French."
-                },
-                {
-                  role: "user",
-                  content: `Product: ${enhancedName}, Brand: ${productData.brand}, Ingredients: ${product.ingredients_text || "N/A"}, Categories: ${product.categories || "N/A"}, Preferences: ${user.dietaryPreferences.join(', ')}`
-                }
-              ],
-              response_format: { type: "json_object" }
-            });
-            const dietData: any = JSON.parse(dietResponse.choices[0].message.content || "{}");
-            productData.dietWarnings = dietData.warnings || [];
+          const isHalalPref = user.dietaryPreferences.includes('halal');
+          const isVeganPref = user.dietaryPreferences.includes('vegan');
+          const isGlutenFreePref = user.dietaryPreferences.includes('sans_gluten');
+          const isDiabeticPref = user.dietaryPreferences.includes('diabetique');
+          const isPeanutAllergyPref = user.dietaryPreferences.includes('allergie_arachide');
 
-            // Hardcode check if AI missed it or for safety
-            if (isHalalPref && hasPorkTerms) {
-              const warningMsg = "Attention : Ce produit contient du porc ou des ingrédients suspects, ce qui est incompatible avec votre régime Halal.";
-              if (!productData.dietWarnings.includes(warningMsg)) {
-                productData.dietWarnings.push(warningMsg);
+          // ── 1. Open Food Facts tags (most reliable) ──────────────────────
+          const analysisTags: string[] = product.ingredients_analysis_tags || [];
+          const labelsTags: string[] = product.labels_tags || [];
+          const categoriesTags: string[] = product.categories_tags || [];
+
+          // Check OFF tags for non-halal / pork
+          const offHasPork = analysisTags.some((t: string) =>
+            ['en:pork', 'en:non-halal', 'en:pork-gelatin', 'fr:porc'].includes(t)
+          );
+          const isHalalCertified = labelsTags.some((t: string) =>
+            t.includes('halal')
+          );
+          const productIsInPorkCategory = categoriesTags.some((t: string) =>
+            ['en:porks', 'en:hams', 'en:bacons', 'en:lards', 'en:pork-products',
+             'en:sausages', 'fr:charcuteries', 'fr:jambons', 'fr:lardons'].includes(t)
+          );
+
+          // ── 2. Keyword scan on product text ──────────────────────────────
+          const productText = (
+            enhancedName + " " +
+            (product.product_name || "") + " " +
+            (product.ingredients_text || "") + " " +
+            (product.brands || "") + " " +
+            (product.categories || "") + " " +
+            analysisTags.join(' ')
+          ).toLowerCase();
+
+          const porkKeywords = /\b(porc|pork|lard|lardon|bacon|jambon|cochon|pig|swine|ham|prosciutto|pancetta|chorizo|saucisson|rillettes|andouille|boudin)\b|gélatine de porc|gelatin|gelatine|graisse de porc|saindoux|e441|extrait de porc/;
+          const keywordHasPork = porkKeywords.test(productText);
+
+          const glutenKeywords = /\b(blé|wheat|gluten|orge|seigle|avoine|épeautre|barley|rye|oat)\b/;
+          const keywordHasGluten = glutenKeywords.test(productText);
+
+          const peanutKeywords = /\b(arachide|arachides|cacahuète|cacahuètes|peanut|peanuts|groundnut)\b/;
+          const keywordHasPeanut = peanutKeywords.test(productText);
+
+          // ── 3. Apply warnings deterministically ──────────────────────────
+          const warnings: string[] = [];
+
+          if (isHalalPref) {
+            const hasPorkSignal = offHasPork || productIsInPorkCategory || keywordHasPork;
+            if (hasPorkSignal && !isHalalCertified) {
+              warnings.push("🚫 Attention Halal : Ce produit contient du porc ou des ingrédients d'origine porcine (lard, gélatine, etc.) incompatibles avec votre régime Halal.");
+            } else if (!hasPorkSignal && !isHalalCertified && (product.ingredients_text || "").length > 10) {
+              // Use AI only when we have ingredient data but no clear signal
+              try {
+                const dietResponse = await openai.chat.completions.create({
+                  model: "gpt-4o",
+                  messages: [
+                    {
+                      role: "system",
+                      content: "Tu es un expert en alimentation halal. Analyse les ingrédients d'un produit alimentaire pour détecter toute trace de porc (porc, lard, gélatine porcine, saindoux, E441, graisses animales non certifiées) ou tout ingrédient clairement non-halal. Si aucun problème n'est détecté, renvoie un tableau vide. Réponds UNIQUEMENT en JSON: { warnings: [string] }. Les avertissements doivent être en français."
+                    },
+                    {
+                      role: "user",
+                      content: `Produit: ${enhancedName}, Marque: ${productData.brand}\nIngrédients: ${product.ingredients_text || "N/A"}\nCatégories: ${product.categories || "N/A"}`
+                    }
+                  ],
+                  response_format: { type: "json_object" }
+                });
+                const dietData: any = JSON.parse(dietResponse.choices[0].message.content || "{}");
+                (dietData.warnings || []).forEach((w: string) => warnings.push(w));
+              } catch (e) {
+                console.error("Halal AI check error:", e);
               }
             }
-          } catch (e) {
-            console.error("Diet Analysis error:", e);
           }
+
+          if (isGlutenFreePref && keywordHasGluten) {
+            warnings.push("⚠️ Contient du gluten : incompatible avec votre régime sans gluten.");
+          }
+
+          if (isPeanutAllergyPref && keywordHasPeanut) {
+            warnings.push("⚠️ Allergie arachide : Ce produit contient des arachides ou des cacahuètes.");
+          }
+
+          if (isVeganPref) {
+            const veganStatus = analysisTags.find((t: string) => t.includes('vegan') || t.includes('non-vegan'));
+            if (veganStatus?.includes('non-vegan')) {
+              warnings.push("⚠️ Non vegan : Ce produit contient des ingrédients d'origine animale.");
+            }
+          }
+
+          if (isDiabeticPref) {
+            const sugars = mappedNutriments.sugars || 0;
+            if (sugars > 15) {
+              warnings.push(`⚠️ Diabète : Ce produit est riche en sucres (${sugars}g/100g). À consommer avec précaution.`);
+            }
+          }
+
+          productData.dietWarnings = warnings;
         }
       }
 
