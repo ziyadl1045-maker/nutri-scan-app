@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, LogOut, ChevronRight, Scan, Trash2, Smartphone, ShieldAlert } from "lucide-react";
+import { Loader2, LogOut, ChevronRight, Scan, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -38,41 +38,16 @@ export default function ProfilePage() {
     initialData: [],
   });
 
-  const { data: sessionsData, refetch: refetchSessions } = useQuery<{ count: number }>({
-    queryKey: ["/api/sessions/count"],
-    initialData: { count: 1 },
-  });
-
-  const logoutAllMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/sessions/logout-all");
-      return res.json();
-    },
-    onSuccess: (data) => {
-      refetchSessions();
-      toast({
-        title: "Appareils déconnectés",
-        description: data.count > 0
-          ? `${data.count} autre(s) appareil(s) déconnecté(s) avec succès.`
-          : "Aucun autre appareil connecté.",
-      });
-    },
-    onError: () => {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de déconnecter les autres appareils." });
-    },
-  });
-
   // Auto-refresh data when user returns to app (multi-device sync)
   useEffect(() => {
     const handleVisibility = () => {
       if (!document.hidden) {
         refetchScans();
-        refetchSessions();
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [refetchScans, refetchSessions]);
+  }, [refetchScans]);
 
   const deleteScanMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -288,31 +263,6 @@ export default function ProfilePage() {
           </form>
 
           <div className="mt-8 pt-6 border-t border-gray-100 space-y-3">
-            {/* Multi-device management */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <div className="flex items-center gap-3 mb-3">
-                <Smartphone className="w-5 h-5 text-slate-500" />
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Appareils connectés</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {sessionsData?.count ?? 1} appareil(s) actif(s) sur votre compte
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => logoutAllMutation.mutate()}
-                disabled={logoutAllMutation.isPending}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-orange-200 text-orange-600 text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50"
-              >
-                {logoutAllMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ShieldAlert className="w-4 h-4" />
-                )}
-                Déconnecter les autres appareils
-              </button>
-            </div>
-
             <button 
               onClick={onLogout}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-red-500 font-medium hover:bg-red-50 transition-colors"
