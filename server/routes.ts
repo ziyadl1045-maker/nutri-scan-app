@@ -251,6 +251,16 @@ export async function registerRoutes(
           const porkKeywords = /\b(porc|pork|lard|lardon|bacon|jambon|cochon|pig|swine|ham|prosciutto|pancetta|chorizo|saucisson|rillettes|andouille|boudin)\b|gélatine de porc|gelatin|gelatine|graisse de porc|saindoux|e441|extrait de porc/;
           const keywordHasPork = porkKeywords.test(productText);
 
+          const alcoholKeywords = /\b(alcool|alcohol|bière|beer|vin|wine|whisky|whiskey|vodka|rhum|rum|gin|champagne|cidre|cider|liqueur|spiritueux|brandy|porto|cognac|armagnac|vermouth|sake|mead|hydromel|brassé|fermenté|levure alcoolique)\b|e120.*alcool|arôme.*alcool|alcool éthylique/;
+          const keywordHasAlcohol = alcoholKeywords.test(productText);
+
+          // Check OFF tags for alcohol
+          const offHasAlcohol = analysisTags.some((t: string) =>
+            ['en:alcoholic-beverages', 'en:beers', 'en:wines', 'en:spirits', 'en:alcohol'].includes(t)
+          ) || categoriesTags.some((t: string) =>
+            ['en:alcoholic-beverages', 'en:beers', 'en:wines', 'en:spirits', 'fr:bieres', 'fr:vins', 'fr:alcools'].includes(t)
+          );
+
           const glutenKeywords = /\b(blé|wheat|gluten|orge|seigle|avoine|épeautre|barley|rye|oat)\b/;
           const keywordHasGluten = glutenKeywords.test(productText);
 
@@ -262,9 +272,15 @@ export async function registerRoutes(
 
           if (isHalalPref) {
             const hasPorkSignal = offHasPork || productIsInPorkCategory || keywordHasPork;
+            const hasAlcoholSignal = offHasAlcohol || keywordHasAlcohol;
+
             if (hasPorkSignal && !isHalalCertified) {
-              warnings.push("🚫 Attention Halal : Ce produit contient du porc ou des ingrédients d'origine porcine (lard, gélatine, etc.) incompatibles avec votre régime Halal.");
-            } else if (!hasPorkSignal && !isHalalCertified && (product.ingredients_text || "").length > 10) {
+              warnings.push("🚫 Haram — Porc : Ce produit contient du porc ou des ingrédients d'origine porcine (lard, gélatine, etc.) incompatibles avec votre régime Halal.");
+            }
+            if (hasAlcoholSignal && !isHalalCertified) {
+              warnings.push("🚫 Haram — Alcool : Ce produit contient de l'alcool, ce qui est incompatible avec votre régime Halal.");
+            }
+            if (!hasPorkSignal && !hasAlcoholSignal && !isHalalCertified && (product.ingredients_text || "").length > 10) {
               // Use AI only when we have ingredient data but no clear signal
               try {
                 const dietResponse = await openai.chat.completions.create({
@@ -272,7 +288,7 @@ export async function registerRoutes(
                   messages: [
                     {
                       role: "system",
-                      content: "Tu es un expert en alimentation halal. Analyse les ingrédients d'un produit alimentaire pour détecter toute trace de porc (porc, lard, gélatine porcine, saindoux, E441, graisses animales non certifiées) ou tout ingrédient clairement non-halal. Si aucun problème n'est détecté, renvoie un tableau vide. Réponds UNIQUEMENT en JSON: { warnings: [string] }. Les avertissements doivent être en français."
+                      content: "Tu es un expert en alimentation halal. Analyse les ingrédients d'un produit alimentaire pour détecter : (1) toute trace de porc (porc, lard, gélatine porcine, saindoux, E441, graisses animales non certifiées), (2) tout alcool (alcool éthylique, vin, bière, arômes alcoolisés, e-numbers issus de fermentation alcoolique). Si aucun problème n'est détecté, renvoie un tableau vide. Réponds UNIQUEMENT en JSON: { warnings: [string] }. Les avertissements commencent par '🚫 Haram — ' et sont en français."
                     },
                     {
                       role: "user",
