@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, LogOut, ChevronRight, Scan, Trash2 } from "lucide-react";
+import { Loader2, LogOut, ChevronRight, Scan, Trash2, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -36,6 +36,11 @@ export default function ProfilePage() {
   const { data: scans, isLoading: isScansLoading, refetch: refetchScans } = useQuery<any[]>({
     queryKey: [api.profile.scans.path],
     initialData: [],
+  });
+
+  const { data: sessionsData } = useQuery<{ count: number }>({
+    queryKey: ["/api/sessions/count"],
+    initialData: { count: 1 },
   });
 
   // Auto-refresh data when user returns to app (multi-device sync)
@@ -263,6 +268,17 @@ export default function ProfilePage() {
           </form>
 
           <div className="mt-8 pt-6 border-t border-gray-100 space-y-3">
+            {/* Appareils connectés (info only) */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+              <Smartphone className="w-5 h-5 text-slate-500 shrink-0" />
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm">Appareils connectés</h4>
+                <p className="text-xs text-muted-foreground">
+                  {sessionsData?.count ?? 1} appareil(s) actif(s) sur votre compte
+                </p>
+              </div>
+            </div>
+
             <button 
               onClick={onLogout}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-red-500 font-medium hover:bg-red-50 transition-colors"
