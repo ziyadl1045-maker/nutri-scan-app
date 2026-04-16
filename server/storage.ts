@@ -1,5 +1,5 @@
 import { and } from "drizzle-orm";
-import { users, sessions, type User, type UpsertUser, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
+import { users, sessions, type User, type UpsertUser, scanHistory, type InsertScanHistory, type ScanHistory, moroccanProducts, type MoroccanProduct, type InsertMoroccanProduct } from "@shared/schema";
 import { db } from "./db";
 import { pool } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -17,6 +17,9 @@ export interface IStorage {
   resetChatCount(userId: string): Promise<void>;
   deleteAllUserSessions(userId: string, currentSid: string): Promise<number>;
   countUserSessions(userId: string): Promise<number>;
+  getMoroccanProduct(barcode: string): Promise<MoroccanProduct | undefined>;
+  seedMoroccanProducts(products: InsertMoroccanProduct[]): Promise<void>;
+  getMoroccanProductsCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -101,6 +104,28 @@ export class DatabaseStorage implements IStorage {
       [userId]
     );
     return parseInt(result.rows[0].count, 10);
+  }
+
+  async getMoroccanProduct(barcode: string): Promise<MoroccanProduct | undefined> {
+    const [product] = await db
+      .select()
+      .from(moroccanProducts)
+      .where(eq(moroccanProducts.barcode, barcode));
+    return product;
+  }
+
+  async seedMoroccanProducts(products: InsertMoroccanProduct[]): Promise<void> {
+    await db
+      .insert(moroccanProducts)
+      .values(products)
+      .onConflictDoNothing();
+  }
+
+  async getMoroccanProductsCount(): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(moroccanProducts);
+    return Number(result[0].count);
   }
 }
 

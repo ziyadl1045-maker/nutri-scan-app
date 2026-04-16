@@ -43,6 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **sessions**: Express session storage for authentication
 - **conversations**: AI chat conversation metadata
 - **messages**: Individual chat messages linked to conversations
+- **moroccan_products**: Local database of 59+ Moroccan products with barcodes, nutritional data, halal certification status, and ingredients (brands: Centrale Laitière, Koutoubia, Bimo, Tria, Lesieur Cristal, Aicha, Agros, Chlef, Doha, Oulmès, Sidi Ali, etc.)
 
 ## Mobile App (Android / Play Store)
 

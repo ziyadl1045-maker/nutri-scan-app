@@ -92,56 +92,68 @@ export async function registerRoutes(
     }
   });
 
-  // Product Lookup (Proxy to OpenFoodFacts)
+  // Product Lookup (Proxy to OpenFoodFacts + Moroccan local DB)
   app.get(api.products.lookup.path, async (req: any, res) => {
     const { barcode } = req.params;
     const userId = req.isAuthenticated() ? req.user.id : null;
     
     try {
-      // Use OpenFoodFacts API (free, no key)
+      // ── 1. Check local Moroccan products database first ────────────────
+      const moroccanProduct = await storage.getMoroccanProduct(barcode);
+
+      // ── 2. Fetch from OpenFoodFacts ────────────────────────────────────
       const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-      if (!response.ok) {
+      const offData = response.ok ? await response.json() : null;
+      const offProduct = offData?.status === 1 ? offData.product : null;
+
+      // If neither source has the product, return 404
+      if (!moroccanProduct && !offProduct) {
         return res.status(404).json({ message: "Product not found" });
       }
-      const data = await response.json();
-      if (data.status === 0) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-      
-      const product = data.product;
-      const nutriments = product.nutriments || {};
-      
-      // Detailed nutritional mapping for better accuracy
-      const mappedNutriments = {
-        sugars: nutriments.sugars_100g || nutriments.sugars || 0,
-        fat: nutriments.fat_100g || nutriments.fat || 0,
-        proteins: nutriments.proteins_100g || nutriments.proteins || 0,
-        salt: nutriments.salt_100g || nutriments.salt || 0,
-        saturated_fat: nutriments['saturated-fat_100g'] || nutriments['saturated-fat'] || 0,
-        fiber: nutriments.fiber_100g || nutriments.fiber || 0,
-        sodium: nutriments.sodium_100g || nutriments.sodium || 0,
-        energy_kcal: nutriments['energy-kcal_100g'] || nutriments['energy-kcal'] || 0,
+
+      // ── 3. Build nutriments — moroccan DB wins if both exist ───────────
+      const offNutriments = offProduct?.nutriments || {};
+      const offMapped = {
+        sugars: offNutriments.sugars_100g || offNutriments.sugars || 0,
+        fat: offNutriments.fat_100g || offNutriments.fat || 0,
+        proteins: offNutriments.proteins_100g || offNutriments.proteins || 0,
+        salt: offNutriments.salt_100g || offNutriments.salt || 0,
+        saturated_fat: offNutriments['saturated-fat_100g'] || offNutriments['saturated-fat'] || 0,
+        fiber: offNutriments.fiber_100g || offNutriments.fiber || 0,
+        sodium: offNutriments.sodium_100g || offNutriments.sodium || 0,
+        energy_kcal: offNutriments['energy-kcal_100g'] || offNutriments['energy-kcal'] || 0,
       };
 
-      const scoreValue = product.nutriscore_score !== undefined ? product.nutriscore_score : null;
-      
-      // Map Nutri-Score (-15 to 40) to 0-100 scale if available
-      // Otherwise fallback to calculation in frontend
-      let calculatedHealthScore = null;
-      if (scoreValue !== undefined && scoreValue !== null) {
-        calculatedHealthScore = Math.max(0, Math.min(100, 100 - (Number(scoreValue) + 15) * (100 / 55)));
+      const moroccanNutriments = moroccanProduct?.nutriments as Record<string, number> | null;
+      const mappedNutriments: Record<string, number> = moroccanNutriments
+        ? {
+            sugars: moroccanNutriments.sugars ?? offMapped.sugars,
+            fat: moroccanNutriments.fat ?? offMapped.fat,
+            proteins: moroccanNutriments.proteins ?? offMapped.proteins,
+            salt: moroccanNutriments.salt ?? offMapped.salt,
+            saturated_fat: moroccanNutriments.saturated_fat ?? offMapped.saturated_fat,
+            fiber: moroccanNutriments.fiber ?? offMapped.fiber,
+            sodium: offMapped.sodium,
+            energy_kcal: moroccanNutriments.energy_kcal ?? offMapped.energy_kcal,
+          }
+        : offMapped;
+
+      // ── 4. Health Score ────────────────────────────────────────────────
+      const offScoreValue = offProduct?.nutriscore_score;
+      let calculatedHealthScore: number | null = null;
+      if (offScoreValue !== undefined && offScoreValue !== null) {
+        calculatedHealthScore = Math.max(0, Math.min(100, 100 - (Number(offScoreValue) + 15) * (100 / 55)));
       }
 
-      // If product name is unknown or missing key data, try to enhance it with AI specifically for Moroccan context
-      let enhancedName = product.product_name || "";
+      // ── 5. Name — moroccan DB wins over OFF, AI used only as last resort ─
+      let enhancedName = moroccanProduct?.name || offProduct?.product_name || "";
       let aiNutriments = null;
       let aiCalories = null;
 
-      // If we don't have a name from OFF, we MUST get it from AI
-      // If we have a name but it's very generic (like "Product"), we can try to improve it
       const isGenericName = !enhancedName || enhancedName.toLowerCase().includes("unknown") || enhancedName.length < 3;
+      const needsAIEnhancement = !moroccanProduct && (isGenericName || !offProduct?.brands || Object.keys(offProduct?.nutriments || {}).length < 3);
 
-      if (isGenericName || !product.brands || !product.nutriments || Object.keys(product.nutriments).length < 3) {
+      if (needsAIEnhancement) {
         try {
           const aiResponse = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -152,7 +164,7 @@ export async function registerRoutes(
               },
               {
                 role: "user",
-                content: `Barcode: ${barcode}. Current data: ${JSON.stringify({ name: product.product_name, brand: product.brands })}`
+                content: `Barcode: ${barcode}. Current data: ${JSON.stringify({ name: offProduct?.product_name, brand: offProduct?.brands })}`
               }
             ],
             response_format: { type: "json_object" }
@@ -166,23 +178,30 @@ export async function registerRoutes(
         }
       }
 
-      // Final fallback if both OFF and AI failed
       if (!enhancedName) enhancedName = "Produit inconnu";
+
+      // ── 6. Halal status from moroccan DB ──────────────────────────────
+      const isHalalCertifiedLocal = moroccanProduct?.isHalalCertified ?? false;
 
       const productData: any = {
         name: enhancedName,
-        brand: product.brands || "Unknown Brand",
+        brand: moroccanProduct?.brand || offProduct?.brands || "Marque inconnue",
         nutriments: mappedNutriments,
-        image_url: product.image_url,
-        additives: product.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
-        calories: Math.round(Number(mappedNutriments.energy_kcal)),
+        image_url: moroccanProduct?.imageUrl || offProduct?.image_url,
+        additives: offProduct?.additives_tags?.map((tag: string) => tag.replace('en:', '').replace('-', ' ')),
+        calories: moroccanProduct?.calories || Math.round(Number(mappedNutriments.energy_kcal)) || null,
         healthScore: calculatedHealthScore,
-        nutriscore: product.nutriscore_grade,
-        serving_quantity: product.serving_quantity || (product.product_name?.toLowerCase().includes("biscuit") ? 25 : null),
+        nutriscore: offProduct?.nutriscore_grade || "unknown",
+        serving_quantity: offProduct?.serving_quantity || null,
         alternatives: [],
         dietWarnings: [],
-        isMoroccan: barcode.startsWith("611"),
+        isMoroccan: !!moroccanProduct || barcode.startsWith("611"),
+        isHalalCertified: isHalalCertifiedLocal,
+        localDbMatch: !!moroccanProduct,
       };
+
+      // Use moroccan product's ingredients when OFF has none
+      const product = offProduct || {};
 
       // Find healthier alternatives using AI if the score is low
       if (calculatedHealthScore !== null && calculatedHealthScore < 70) {
@@ -239,12 +258,13 @@ export async function registerRoutes(
           );
 
           // ── 2. Keyword scan on product text ──────────────────────────────
+          const ingredientsText = moroccanProduct?.ingredients || product.ingredients_text || "";
           const productText = (
             enhancedName + " " +
             (product.product_name || "") + " " +
-            (product.ingredients_text || "") + " " +
-            (product.brands || "") + " " +
-            (product.categories || "") + " " +
+            ingredientsText + " " +
+            (moroccanProduct?.brand || product.brands || "") + " " +
+            (moroccanProduct?.category || product.categories || "") + " " +
             analysisTags.join(' ')
           ).toLowerCase();
 
@@ -273,14 +293,15 @@ export async function registerRoutes(
           if (isHalalPref) {
             const hasPorkSignal = offHasPork || productIsInPorkCategory || keywordHasPork;
             const hasAlcoholSignal = offHasAlcohol || keywordHasAlcohol;
+            const halalCertified = isHalalCertifiedLocal || isHalalCertified;
 
-            if (hasPorkSignal && !isHalalCertified) {
+            if (hasPorkSignal && !halalCertified) {
               warnings.push("🚫 Haram — Porc : Ce produit contient du porc ou des ingrédients d'origine porcine (lard, gélatine, etc.) incompatibles avec votre régime Halal.");
             }
-            if (hasAlcoholSignal && !isHalalCertified) {
+            if (hasAlcoholSignal && !halalCertified) {
               warnings.push("🚫 Haram — Alcool : Ce produit contient de l'alcool, ce qui est incompatible avec votre régime Halal.");
             }
-            if (!hasPorkSignal && !hasAlcoholSignal && !isHalalCertified && (product.ingredients_text || "").length > 10) {
+            if (!hasPorkSignal && !hasAlcoholSignal && !halalCertified && ingredientsText.length > 10) {
               // Use AI only when we have ingredient data but no clear signal
               try {
                 const dietResponse = await openai.chat.completions.create({
@@ -292,7 +313,7 @@ export async function registerRoutes(
                     },
                     {
                       role: "user",
-                      content: `Produit: ${enhancedName}, Marque: ${productData.brand}\nIngrédients: ${product.ingredients_text || "N/A"}\nCatégories: ${product.categories || "N/A"}`
+                      content: `Produit: ${enhancedName}, Marque: ${productData.brand}\nIngrédients: ${ingredientsText || "N/A"}\nCatégories: ${moroccanProduct?.category || product.categories || "N/A"}`
                     }
                   ],
                   response_format: { type: "json_object" }

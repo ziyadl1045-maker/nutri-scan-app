@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { storage } from "./storage";
+import { moroccanProductsData } from "./seeds/moroccan_products";
 
 const app = express();
 const httpServer = createServer(app);
@@ -62,6 +64,19 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+
+  // Auto-seed Moroccan products database on first startup
+  try {
+    const count = await storage.getMoroccanProductsCount();
+    if (count === 0) {
+      await storage.seedMoroccanProducts(moroccanProductsData);
+      log(`Seeded ${moroccanProductsData.length} Moroccan products into database`);
+    } else {
+      log(`Moroccan products DB: ${count} products already loaded`);
+    }
+  } catch (e) {
+    log(`Moroccan DB seed skipped (table may not exist yet): ${e}`);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
