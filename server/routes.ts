@@ -49,6 +49,28 @@ export async function registerRoutes(
     }
   });
 
+  // Multi-device session management
+  app.get("/api/sessions/count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const count = await storage.countUserSessions(userId);
+      res.json({ count });
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/sessions/logout-all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const currentSid = req.sessionID;
+      const deleted = await storage.deleteAllUserSessions(userId, currentSid);
+      res.json({ message: `${deleted} autre(s) appareil(s) déconnecté(s)`, count: deleted });
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.delete(`${api.profile.scans.path}/:id`, isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;

@@ -1,7 +1,8 @@
 import { and } from "drizzle-orm";
-import { users, type User, type UpsertUser, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
+import { users, sessions, type User, type UpsertUser, scanHistory, type InsertScanHistory, type ScanHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { pool } from "./db";
+import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -11,8 +12,11 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   getScanHistory(userId: string): Promise<ScanHistory[]>;
   createScanEntry(entry: InsertScanHistory): Promise<ScanHistory>;
+  deleteScanEntry(id: number, userId: string): Promise<boolean>;
   incrementChatCount(userId: string): Promise<void>;
   resetChatCount(userId: string): Promise<void>;
+  deleteAllUserSessions(userId: string, currentSid: string): Promise<number>;
+  countUserSessions(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -81,6 +85,22 @@ export class DatabaseStorage implements IStorage {
     await db.update(users)
       .set({ chatMessagesCount: 0, lastResetDate: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  async deleteAllUserSessions(userId: string, currentSid: string): Promise<number> {
+    const result = await pool.query(
+      `DELETE FROM sessions WHERE sess->'passport'->>'user' = $1 AND sid != $2`,
+      [userId, currentSid]
+    );
+    return result.rowCount ?? 0;
+  }
+
+  async countUserSessions(userId: string): Promise<number> {
+    const result = await pool.query(
+      `SELECT COUNT(*) FROM sessions WHERE sess->'passport'->>'user' = $1`,
+      [userId]
+    );
+    return parseInt(result.rows[0].count, 10);
   }
 }
 
