@@ -8,8 +8,10 @@ import { useState } from "react";
 import { api } from "@shared/routes";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 export default function ProductDetails() {
+  const { t } = useTranslation();
   const [match, params] = useRoute("/product/:barcode");
   const [, setLocation] = useLocation();
   const barcode = match ? params.barcode : null;
@@ -23,14 +25,12 @@ export default function ProductDetails() {
     },
   });
   
-  // Real health score calculation (simplified Nutri-Score logic)
   const calculateScore = (p: any) => {
     if (!p || !p.nutriments) return 0;
     
     let points = 0;
     const n = p.nutriments as Record<string, any>;
     
-    // Negative points (bad)
     const energy = p.calories || 0;
     if (energy > 800) points += 10;
     else if (energy > 160) points += Math.floor(energy / 80);
@@ -47,17 +47,11 @@ export default function ProductDetails() {
     if (salt > 0.9) points += 10;
     else if (salt > 0.1) points += Math.floor(salt / 0.1);
     
-    // Positive points (good)
     const proteins = parseFloat(n.proteins) || 0;
     const fiber = parseFloat(n.fiber) || 0;
-    
     const goodPoints = Math.min(5, Math.floor(proteins / 1.6)) + Math.min(5, Math.floor(fiber / 0.9));
     
     const finalScore = points - goodPoints;
-    
-    // Map to 0-100 scale (inverted because finalScore is higher for bad products)
-    // Nutri-Score ranges from -15 (best) to 40 (worst)
-    // Let's normalize: 0 is worst, 100 is best
     return Math.max(0, Math.min(100, 100 - (finalScore + 15) * 2));
   };
 
@@ -69,11 +63,11 @@ export default function ProductDetails() {
   );
 
   const getRecommendation = (s: number) => {
-    if (s >= 80) return "Excellent product! You can enjoy this daily.";
-    if (s >= 60) return "Good choice for a balanced diet.";
-    if (s >= 40) return "Moderate. Try to consume this occasionally.";
-    if (s >= 20) return "Poor nutritional quality. Limit your consumption.";
-    return "Very poor. Better to find a healthier alternative.";
+    if (s >= 80) return t("rec_excellent");
+    if (s >= 60) return t("rec_good");
+    if (s >= 40) return t("rec_moderate");
+    if (s >= 20) return t("rec_poor");
+    return t("rec_very_poor");
   };
 
   if (isLoading || aiLookupMutation.isPending) {
@@ -81,7 +75,11 @@ export default function ProductDetails() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          {aiLookupMutation.isPending && <p className="text-sm font-medium text-muted-foreground animate-pulse">AI is estimating nutrition...</p>}
+          {aiLookupMutation.isPending && (
+            <p className="text-sm font-medium text-muted-foreground animate-pulse">
+              {t("loading_ai")}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -93,10 +91,10 @@ export default function ProductDetails() {
         <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-6">
           <Info className="w-8 h-8 text-red-500" />
         </div>
-        <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
+        <h2 className="text-2xl font-bold mb-2">{t("product_not_found")}</h2>
         <p className="text-muted-foreground mb-8">
-          We couldn't find a product with barcode <span className="font-mono font-bold text-foreground">{barcode}</span>. 
-          Would you like to search by name instead?
+          {t("product_not_found_desc")} <span className="font-mono font-bold text-foreground">{barcode}</span>.{" "}
+          {t("search_by_name")}
         </p>
         
         <div className="w-full max-w-sm space-y-4">
@@ -104,7 +102,7 @@ export default function ProductDetails() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input 
               type="text"
-              placeholder="Enter product name (e.g. Whole Milk)"
+              placeholder={t("enter_product_name")}
               className="w-full h-14 pl-12 pr-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/20 transition-all text-lg"
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
@@ -117,12 +115,12 @@ export default function ProductDetails() {
             className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-95"
           >
             <Sparkles className="w-5 h-5" />
-            Estimate with AI
+            {t("estimate_with_ai")}
           </button>
           
           <div className="pt-4">
             <Link href="/scan" className="text-sm font-semibold text-primary hover:underline">
-              Scan Another Product
+              {t("scan_another")}
             </Link>
           </div>
         </div>
@@ -153,7 +151,7 @@ export default function ProductDetails() {
             <ArrowLeft className="w-6 h-6 text-slate-800" />
           </div>
         </Link>
-        <h1 className="font-bold text-slate-800">Analyse du Produit</h1>
+        <h1 className="font-bold text-slate-800">{t("product_analysis")}</h1>
         <Share2 className="w-6 h-6 text-slate-800" />
       </div>
 
@@ -173,9 +171,9 @@ export default function ProductDetails() {
             )}
           </div>
           <h2 className="text-2xl font-bold text-slate-900 font-display mb-1">{displayProduct.name}</h2>
-          <p className="text-muted-foreground">{displayProduct.brand || "Marque inconnue"}</p>
+          <p className="text-muted-foreground">{displayProduct.brand || t("unknown_brand")}</p>
           <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
-            Valeurs pour {servingSize}g {servingSize !== 100 && "(Portion)"}
+            {t("values_for")} {servingSize}g {servingSize !== 100 && `(${t("serving")})`}
           </div>
         </div>
 
@@ -189,36 +187,36 @@ export default function ProductDetails() {
 
         {/* Nutrients Grid */}
         <div>
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Analyse Nutritionnelle</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-4">{t("nutrient_analysis")}</h3>
           <div className="grid grid-cols-2 gap-4">
             <NutrientCard 
-              label="Sucres" 
+              label={t("sugars")}
               value={`${getNutrientValue(displayProduct.nutriments?.sugars)}g`} 
-              status={parseFloat(displayProduct.nutriments?.sugars) * multiplier > 10 * multiplier ? "Élevé" : "Raisonnable"}
+              status={parseFloat(displayProduct.nutriments?.sugars) * multiplier > 10 * multiplier ? t("high") : t("reasonable")}
               color={parseFloat(displayProduct.nutriments?.sugars) * multiplier > 10 * multiplier ? "red" : "green"}
             />
             <NutrientCard 
-              label="Lipides" 
+              label={t("fat")}
               value={`${getNutrientValue(displayProduct.nutriments?.fat)}g`} 
-              status={parseFloat(displayProduct.nutriments?.fat) * multiplier > 15 * multiplier ? "Élevé" : "Modéré"}
+              status={parseFloat(displayProduct.nutriments?.fat) * multiplier > 15 * multiplier ? t("high") : t("moderate")}
               color={parseFloat(displayProduct.nutriments?.fat) * multiplier > 15 * multiplier ? "red" : "orange"}
             />
             <NutrientCard 
-              label="Protéines" 
+              label={t("proteins")}
               value={`${getNutrientValue(displayProduct.nutriments?.proteins)}g`} 
-              status="Sain"
+              status={t("healthy")}
               color="green"
             />
             <NutrientCard 
-              label="Sel" 
+              label={t("salt")}
               value={`${(parseFloat(displayProduct.nutriments?.salt || 0) * multiplier).toFixed(2)}g`} 
-              status={parseFloat(displayProduct.nutriments?.salt) * multiplier > 1.5 * multiplier ? "Élevé" : "Faible"}
+              status={parseFloat(displayProduct.nutriments?.salt) * multiplier > 1.5 * multiplier ? t("high") : t("low")}
               color={parseFloat(displayProduct.nutriments?.salt) * multiplier > 1.5 * multiplier ? "red" : "green"}
             />
             <NutrientCard 
-              label="Calories" 
+              label={t("calories_label")}
               value={`${getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal)} kcal`} 
-              status={getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal) > 400 * multiplier ? "Élevé" : "Normal"}
+              status={getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal) > 400 * multiplier ? t("high") : t("normal")}
               color={getCalories(displayProduct.calories || displayProduct.nutriments?.energy_kcal) > 400 * multiplier ? "red" : "green"}
             />
           </div>
@@ -227,7 +225,7 @@ export default function ProductDetails() {
         {/* Additives Section */}
         {displayProduct.additives && displayProduct.additives.length > 0 && (
           <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Chemical Additives</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">{t("chemical_additives")}</h3>
             <div className="flex flex-wrap gap-2">
               {displayProduct.additives.map((additive: string, idx: number) => (
                 <div key={idx} className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-100 rounded-lg text-sm font-medium">
@@ -244,8 +242,8 @@ export default function ProductDetails() {
             <div className="flex items-center gap-3">
               <div className="text-2xl">🇲🇦</div>
               <div>
-                <h4 className="font-bold text-emerald-900 text-sm">Produit Local</h4>
-                <p className="text-[10px] text-emerald-700">Soutient l'économie marocaine</p>
+                <h4 className="font-bold text-emerald-900 text-sm">{t("local_product")}</h4>
+                <p className="text-[10px] text-emerald-700">{t("supports_economy")}</p>
               </div>
             </div>
             <div className="text-right">
@@ -260,7 +258,7 @@ export default function ProductDetails() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-emerald-500" />
-              <h3 className="text-lg font-bold text-slate-900">Alternatives plus saines</h3>
+              <h3 className="text-lg font-bold text-slate-900">{t("healthier_alternatives")}</h3>
             </div>
             <div className="space-y-3">
               {displayProduct.alternatives.map((alt: any, idx: number) => (
@@ -289,7 +287,7 @@ export default function ProductDetails() {
               <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
                 <Info className="w-4 h-4 text-red-600" />
               </div>
-              <h3 className="font-bold">Attention Régime</h3>
+              <h3 className="font-bold">{t("diet_warning")}</h3>
             </div>
             <ul className="list-disc list-inside text-sm text-red-50 space-y-1">
               {displayProduct.dietWarnings.map((warning: string, idx: number) => (
@@ -307,10 +305,10 @@ export default function ProductDetails() {
             whileTap={{ scale: 0.98 }}
             className="p-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
-            <h3 className="font-bold text-lg mb-1">Have questions?</h3>
-            <p className="text-emerald-100 text-sm mb-4">Ask our AI nutritionist about this product.</p>
+            <h3 className="font-bold text-lg mb-1">{t("have_questions")}</h3>
+            <p className="text-emerald-100 text-sm mb-4">{t("ask_nutritionist")}</p>
             <div className="inline-flex px-4 py-2 bg-white/20 backdrop-blur-md rounded-lg text-sm font-medium">
-              Start Chat
+              {t("start_chat")}
             </div>
           </motion.div>
         </Link>
