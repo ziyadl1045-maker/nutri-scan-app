@@ -74,7 +74,7 @@ export function HealthGauge({ score }: HealthGaugeProps) {
           <h3 className={`text-2xl font-bold font-display ${color}`}>{status}</h3>
         </div>
         <p className="text-4xl font-black text-slate-900">
-          {score}
+          {Math.round(score)}
           <span className="text-lg text-muted-foreground font-medium ml-1">/100</span>
         </p>
         <p className="text-sm text-muted-foreground font-medium">{message}</p>
