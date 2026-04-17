@@ -221,11 +221,22 @@ export async function registerRoutes(
             messages: [
               {
                 role: "system",
-                content: "You are a Moroccan nutrition expert. Suggest 3 healthier alternatives for the given product that are commonly available in Moroccan supermarkets (Marjane, Carrefour, Acima, BIM). Focus on better Nutri-Score alternatives. Return JSON: { alternatives: [{ name, brand, healthScore, reason }] }."
+                content: `Tu es un expert en nutrition qui connaît parfaitement les produits vendus dans les supermarchés marocains (Marjane, Carrefour, Acima, BIM, Label'Vie).
+
+RÈGLES STRICTES :
+1. Tu dois suggérer EXACTEMENT 3 alternatives plus saines AU MÊME TYPE de produit.
+2. Chaque alternative DOIT être un produit RÉEL avec son NOM EXACT et sa MARQUE EXACTE tels qu'ils apparaissent en magasin.
+3. N'invente JAMAIS un produit. Utilise uniquement des produits que tu connais avec certitude.
+4. Privilégie ces marques connues au Maroc : Centrale Laitière, Jaouda, Yawmi, Koutoubia, Bimo, Tria, Lesieur Cristal, Aicha, Agros, Chlef, Oulmès, Sidi Ali, Doha, Danone, Nestlé, Kellogg's, Bjorg, Les 2 Vaches, President, Candia, Activia, Actimel, Special K, Nature Valley, Welch's, Heinz, Knorr, Mc Vitie's, Jacobs, Uncle Ben's, Panzani, Barilla, Monini, Huilerie de la Mitidja.
+5. Le champ "name" = nom exact du produit. Le champ "brand" = marque exacte.
+6. Le champ "healthScore" doit être un entier entre 60 et 95.
+7. Le champ "reason" doit expliquer en français pourquoi c'est meilleur (max 12 mots).
+
+Retourne UNIQUEMENT du JSON valide : { "alternatives": [{ "name": string, "brand": string, "healthScore": number, "reason": string }] }`
               },
               {
                 role: "user",
-                content: `Product: ${productData.name}, Brand: ${productData.brand}, Score: ${productData.healthScore}, Type: ${product.categories || "Food"}`
+                content: `Produit scanné : "${productData.name}" — Marque : "${productData.brand}" — Catégorie : "${moroccanProduct?.category || product.categories || "Alimentaire"}" — Score santé actuel : ${Math.round(calculatedHealthScore ?? 0)}/100`
               }
             ],
             response_format: { type: "json_object" }
@@ -233,7 +244,7 @@ export async function registerRoutes(
           const altData: any = JSON.parse(altResponse.choices[0].message.content || "{}");
           productData.alternatives = (altData.alternatives || []).map((a: any) => ({
             ...a,
-            healthScore: a.healthScore || 80
+            healthScore: Math.round(a.healthScore || 75)
           }));
         } catch (e) {
           console.error("Alternatives AI error:", e);
