@@ -102,9 +102,19 @@ export async function registerRoutes(
       const moroccanProduct = await storage.getMoroccanProduct(barcode);
 
       // ── 2. Fetch from OpenFoodFacts ────────────────────────────────────
-      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-      const offData = response.ok ? await response.json() : null;
-      const offProduct = offData?.status === 1 ? offData.product : null;
+      let offProduct: any = null;
+      try {
+        const offResponse = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        if (offResponse.ok) {
+          const offData = await offResponse.json();
+          if (offData?.status === 1) {
+            offProduct = offData.product;
+          }
+        }
+      } catch (offErr) {
+        console.error("OpenFoodFacts fetch error:", offErr);
+        // Continue — we may still have a local Moroccan product
+      }
 
       // If neither source has the product, return 404
       if (!moroccanProduct && !offProduct) {
