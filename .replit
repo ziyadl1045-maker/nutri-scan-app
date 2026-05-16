@@ -1,5 +1,4 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
-run = "npm run dev"
+modules = ["nodejs-20", "web"]
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
@@ -36,7 +35,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "tsx server/index.ts"
 waitForPort = 5000
 
 [agent]
