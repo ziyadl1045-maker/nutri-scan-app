@@ -22,12 +22,18 @@ const getOidcConfig = memoize(
 export function getSession() {
   const sessionTtl = 30 * 24 * 60 * 60 * 1000; // 30 days for multi-device support
   const pgStore = connectPg(session);
+
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
+    errorLog: () => {}, // silence pg session errors (frozen DB, etc.)
   });
+
+  // Swallow pool errors so a frozen DB doesn't crash the process
+  (sessionStore as any).pool?.on?.("error", () => {});
+
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
