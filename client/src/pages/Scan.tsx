@@ -36,21 +36,32 @@ export default function ScanPage() {
           return;
         }
 
-        // On PC there's usually one webcam; on mobile prefer the back camera
-        const cameraId = cameras.length > 1 ? cameras[cameras.length - 1].id : cameras[0].id;
         const html5QrCode = new Html5Qrcode("reader");
         scannerRef.current = html5QrCode;
 
-        await html5QrCode.start(
-          cameraId,
-          { fps: 10, qrbox: { width: 240, height: 240 } },
-          (decodedText: string) => {
-            stopScanner().then(() => {
-              if (mountedRef.current) setLocation(`/product/${decodedText}`);
-            });
-          },
-          () => {}
-        );
+        const scanConfig = { fps: 10, qrbox: { width: 240, height: 240 } };
+        const onSuccess = (decodedText: string) => {
+          stopScanner().then(() => {
+            if (mountedRef.current) setLocation(`/product/${decodedText}`);
+          });
+        };
+
+        // Try rear camera first (mobile), fall back to front/webcam (PC)
+        try {
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            scanConfig,
+            onSuccess,
+            () => {}
+          );
+        } catch {
+          await html5QrCode.start(
+            { facingMode: "user" },
+            scanConfig,
+            onSuccess,
+            () => {}
+          );
+        }
 
         if (mountedRef.current) setStarted(true);
       } catch (err: any) {
