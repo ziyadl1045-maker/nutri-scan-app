@@ -8,6 +8,7 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
 import { storage } from "../../storage";
+import { pool } from "../../db";
 
 const getOidcConfig = memoize(
   async () => {
@@ -24,15 +25,12 @@ export function getSession() {
   const pgStore = connectPg(session);
 
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    pool,                          // reuse the shared pool (has 5s timeout)
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
-    errorLog: () => {}, // silence pg session errors (frozen DB, etc.)
+    errorLog: () => {},            // silence pg session errors
   });
-
-  // Swallow pool errors so a frozen DB doesn't crash the process
-  (sessionStore as any).pool?.on?.("error", () => {});
 
   return session({
     secret: process.env.SESSION_SECRET!,

@@ -10,5 +10,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 5000,  // fail fast if DB unreachable
+  idleTimeoutMillis: 10000,
+  max: 10,
+});
+
+// Prevent unhandled pool errors from crashing the process
+pool.on("error", (err) => {
+  console.warn("[db] pool error (non-fatal):", err.message);
+});
+
 export const db = drizzle(pool, { schema });
