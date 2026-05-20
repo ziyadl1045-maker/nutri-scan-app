@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdOptions, AdLoadInfo, InterstitialAdPluginEvents } from '@capacitor-community/admob';
 
 export const ADMOB_IDS = {
-  banner: 'ca-app-pub-3940256099942544/6300978111',
+  banner: 'ca-app-pub-1132707752513601/9796858334',
   interstitial: 'ca-app-pub-3940256099942544/1033173712',
 };
 
@@ -14,7 +14,7 @@ export async function initAdMob() {
     await AdMob.initialize({
       requestTrackingAuthorization: false,
       testingDevices: [],
-      initializeForTesting: true,
+      initializeForTesting: false,
     });
   } catch (e) {
     console.error('AdMob init error:', e);
@@ -29,7 +29,7 @@ export async function showBannerAd() {
       adSize: BannerAdSize.ADAPTIVE_BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 60,
-      isTesting: true,
+      isTesting: false,
     };
     await AdMob.showBanner(options);
   } catch (e) {
