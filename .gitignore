@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+attached_assets/*.zip
+attached_assets/unzipped_content/
+attached_assets/generated_images/
