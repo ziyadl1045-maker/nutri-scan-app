@@ -3,7 +3,7 @@ import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdOptions, AdLo
 
 export const ADMOB_IDS = {
   banner: 'ca-app-pub-1132707752513601/9796858334',
-  interstitial: 'ca-app-pub-3940256099942544/1033173712',
+  interstitial: 'ca-app-pub-1132707752513601/5673780497',
 };
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
@@ -51,7 +51,7 @@ export async function showInterstitialAd(): Promise<boolean> {
   try {
     const options: AdOptions = {
       adId: ADMOB_IDS.interstitial,
-      isTesting: true,
+      isTesting: false,
     };
     await AdMob.prepareInterstitial(options);
     await AdMob.showInterstitial();
