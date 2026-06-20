@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useConversations, useCreateConversation, useConversation, useChatStream, useDeleteConversation } from "@/hooks/use-chat";
 import { BottomNav } from "@/components/BottomNav";
-import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Trash2, Menu } from "lucide-react";
+import { Send, Plus, MessageSquare, Bot, Image as ImageIcon, X, Trash2, Menu, Crown, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 
 // Helper for file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -17,11 +19,17 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const { data: conversations, isLoading: isLoadingConvos } = useConversations();
   const { mutate: createConvo } = useCreateConversation();
   const { mutate: deleteConvo } = useDeleteConversation();
   const [activeId, setActiveId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+
+  const isPremium = user?.subscriptionStatus === 'premium';
+  const FREE_LIMIT = 5;
+  const used = user?.chatMessagesCount || 0;
+  const remaining = Math.max(0, FREE_LIMIT - used);
 
   // Auto-select first conversation or create one if none exist
   useEffect(() => {
@@ -53,26 +61,61 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-20 overflow-hidden h-screen sm:h-auto">
       {/* Header */}
-      <div className="bg-white px-6 py-4 shadow-sm z-20 flex items-center justify-between border-b">
-        <div className="flex items-center gap-3">
+      <div className="bg-white px-6 py-4 shadow-sm z-20 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setShowHistory(!showHistory)}
+              className="text-slate-600"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold font-display text-slate-900">Expert Nutrition AI</h1>
+              {isPremium ? (
+                <div className="flex items-center gap-1">
+                  <Crown className="w-3 h-3 text-amber-500" />
+                  <span className="text-xs text-amber-600 font-semibold">Messages illimités</span>
+                </div>
+              ) : (
+                <span className="text-xs text-slate-400">{remaining}/{FREE_LIMIT} messages restants aujourd'hui</span>
+              )}
+            </div>
+          </div>
           <Button 
-            variant="ghost" 
+            onClick={handleNewChat}
             size="icon"
-            onClick={() => setShowHistory(!showHistory)}
-            className="text-slate-600"
+            variant="ghost"
+            className="bg-emerald-50 text-primary hover:bg-emerald-100 rounded-full"
           >
-            <Menu className="w-5 h-5" />
+            <Plus className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold font-display text-slate-900">Expert Nutrition AI</h1>
         </div>
-        <Button 
-          onClick={handleNewChat}
-          size="icon"
-          variant="ghost"
-          className="bg-emerald-50 text-primary hover:bg-emerald-100 rounded-full"
-        >
-          <Plus className="w-5 h-5" />
-        </Button>
+
+        {/* Message usage bar for free users */}
+        {!isPremium && (
+          <div className="mt-3">
+            <div className="w-full bg-gray-100 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full transition-all ${remaining <= 1 ? 'bg-red-400' : remaining <= 2 ? 'bg-orange-400' : 'bg-emerald-400'}`}
+                style={{ width: `${(used / FREE_LIMIT) * 100}%` }}
+              />
+            </div>
+            {remaining === 0 && (
+              <Link href="/premium">
+                <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-600" />
+                    <span className="text-xs font-semibold text-amber-700">Limite atteinte — Passer à Premium</span>
+                  </div>
+                  <Crown className="w-4 h-4 text-amber-500" />
+                </div>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex overflow-hidden relative min-h-0">

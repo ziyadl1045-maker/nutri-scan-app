@@ -52,13 +52,29 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-slate-900 font-display">
               {user?.firstName || "Friend"}!
             </h1>
+            {user?.subscriptionStatus === 'premium' ? (
+              <div className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full">
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-xs font-bold text-amber-700">Membre Premium</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-full">
+                <span className="text-xs font-medium text-slate-500">Compte Gratuit</span>
+                <span className="text-xs text-slate-400">· {5 - (user?.chatMessagesCount || 0)} msg restants</span>
+              </div>
+            )}
           </div>
           <Link href="/profile">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center cursor-pointer hover:bg-emerald-200 transition-colors">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-colors relative ${user?.subscriptionStatus === 'premium' ? 'bg-amber-100 hover:bg-amber-200' : 'bg-emerald-100 hover:bg-emerald-200'}`}>
               {user?.profileImageUrl ? (
                 <img src={user.profileImageUrl} alt="Profile" className="w-full h-full rounded-full object-cover" />
               ) : (
-                <User className="text-emerald-700 w-6 h-6" />
+                <User className={`w-6 h-6 ${user?.subscriptionStatus === 'premium' ? 'text-amber-700' : 'text-emerald-700'}`} />
+              )}
+              {user?.subscriptionStatus === 'premium' && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow-sm">
+                  <Crown className="w-3 h-3 text-white" />
+                </div>
               )}
             </div>
           </Link>

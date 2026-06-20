@@ -142,19 +142,33 @@ export default function ProfilePage() {
         <p className="text-muted-foreground mb-4">{user?.email}</p>
         
         {user?.subscriptionStatus === 'premium' ? (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
-            <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-            Membre Premium
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
+              <Crown className="w-3.5 h-3.5 text-amber-500" />
+              Membre Premium ✨
+            </div>
+            <p className="text-xs text-slate-400">Chat IA illimité · Sans publicités</p>
           </div>
         ) : (
-          <Link href="/premium">
-            <button 
-              className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-200 hover:bg-amber-100 transition-all"
-            >
-              <Crown className="w-3.5 h-3.5" />
-              Passer à Premium
-            </button>
-          </Link>
+          <div className="space-y-3">
+            <div className="text-sm text-slate-500">
+              <span className="font-bold text-slate-700">{5 - (user?.chatMessagesCount || 0)}</span>/5 messages IA restants aujourd'hui
+            </div>
+            <div className="w-40 mx-auto bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all ${(user?.chatMessagesCount || 0) >= 4 ? 'bg-red-400' : (user?.chatMessagesCount || 0) >= 3 ? 'bg-orange-400' : 'bg-emerald-400'}`}
+                style={{ width: `${((user?.chatMessagesCount || 0) / 5) * 100}%` }}
+              />
+            </div>
+            <Link href="/premium">
+              <button 
+                className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-full text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                Passer à Premium · 50 MAD/mois
+              </button>
+            </Link>
+          </div>
         )}
       </div>
 
