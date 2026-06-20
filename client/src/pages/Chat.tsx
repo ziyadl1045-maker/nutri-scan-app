@@ -94,27 +94,17 @@ export default function ChatPage() {
           </Button>
         </div>
 
-        {/* Message usage bar for free users */}
-        {!isPremium && (
-          <div className="mt-3">
-            <div className="w-full bg-gray-100 rounded-full h-1.5">
-              <div 
-                className={`h-1.5 rounded-full transition-all ${remaining <= 1 ? 'bg-red-400' : remaining <= 2 ? 'bg-orange-400' : 'bg-emerald-400'}`}
-                style={{ width: `${(used / FREE_LIMIT) * 100}%` }}
-              />
+        {/* Upgrade prompt only when limit is reached */}
+        {!isPremium && remaining === 0 && (
+          <Link href="/premium">
+            <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-600" />
+                <span className="text-xs font-semibold text-amber-700">Limite atteinte — Passer à Premium</span>
+              </div>
+              <Crown className="w-4 h-4 text-amber-500" />
             </div>
-            {remaining === 0 && (
-              <Link href="/premium">
-                <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-amber-600" />
-                    <span className="text-xs font-semibold text-amber-700">Limite atteinte — Passer à Premium</span>
-                  </div>
-                  <Crown className="w-4 h-4 text-amber-500" />
-                </div>
-              </Link>
-            )}
-          </div>
+          </Link>
         )}
       </div>
 

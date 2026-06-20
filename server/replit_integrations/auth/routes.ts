@@ -22,7 +22,11 @@ export function registerAuthRoutes(app: Express): void {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        // Accept login by username OR email
+        let user = await storage.getUserByUsername(username);
+        if (!user) {
+          user = await storage.getUserByEmail(username);
+        }
         if (!user || !user.password) {
           return done(null, false, { message: "Utilisateur non trouvé" });
         }
@@ -96,8 +100,17 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/login-local", passport.authenticate("local"), (req, res) => {
-    res.json(sanitizeUser(req.user));
+  app.post("/api/login-local", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) return res.status(500).json({ message: "Erreur serveur" });
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Identifiants incorrects" });
+      }
+      req.login(user, (loginErr) => {
+        if (loginErr) return res.status(500).json({ message: "Erreur de session" });
+        return res.json(sanitizeUser(user));
+      });
+    })(req, res, next);
   });
 
   // Get current authenticated user

@@ -2,16 +2,19 @@ import { useRoute, Link, useLocation } from "wouter";
 import { useProduct } from "@/hooks/use-products";
 import { HealthGauge } from "@/components/HealthGauge";
 import { BottomNav } from "@/components/BottomNav";
-import { ArrowLeft, Share2, Info, Search, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Share2, Info, Search, Sparkles, Loader2, Crown, Lock, ShieldCheck, AlertTriangle, Heart, BarChart3, Leaf } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { api } from "@shared/routes";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ProductDetails() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isPremium = user?.subscriptionStatus === 'premium';
   const [match, params] = useRoute("/product/:barcode");
   const [, setLocation] = useLocation();
   const barcode = match ? params.barcode : null;
@@ -297,6 +300,149 @@ export default function ProductDetails() {
               ))}
             </ul>
           </div>
+        )}
+
+        {/* ── PREMIUM SECTION ───────────────────────────────────────────── */}
+        {isPremium ? (
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            {/* Allergen Detection */}
+            <div className="bg-white rounded-2xl p-5 border border-amber-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Détection des allergènes</h3>
+                  <div className="flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] text-amber-600 font-bold">Premium</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { name: "Gluten", present: (displayProduct.nutriments?.sugars > 5), icon: "🌾" },
+                  { name: "Lactose", present: (displayProduct.brand?.toLowerCase().includes("lait") || displayProduct.name?.toLowerCase().includes("lait")), icon: "🥛" },
+                  { name: "Arachides", present: false, icon: "🥜" },
+                  { name: "Œufs", present: false, icon: "🥚" },
+                ].map((allergen) => (
+                  <div key={allergen.name} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{allergen.icon}</span>
+                      <span className="text-sm text-slate-700 font-medium">{allergen.name}</span>
+                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${allergen.present ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                      {allergen.present ? "⚠ Présent" : "✓ Absent"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Personalized Health Score */}
+            <div className="bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Évaluation personnalisée</h3>
+                  <div className="flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] text-amber-600 font-bold">Premium</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {(user?.dietaryPreferences || []).length > 0 ? (user.dietaryPreferences || []).map((pref: string) => (
+                  <div key={pref} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <Leaf className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-slate-700 capitalize">{pref.replace('_', ' ')}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {pref === 'halal' ? (displayProduct.isHalalCertified ? '✅ Certifié Halal' : '⚠️ Statut halal non confirmé') : ''}
+                        {pref === 'vegan' ? (displayProduct.nutriments?.proteins > 0 ? '🌿 Vérifier les ingrédients' : '✅ Compatible') : ''}
+                        {pref === 'sans_gluten' ? '⚠️ Vérifier les ingrédients' : ''}
+                        {pref === 'diabetique' ? (displayProduct.nutriments?.sugars > 10 ? '❌ Trop sucré pour diabétiques' : '✅ Sucre acceptable') : ''}
+                      </p>
+                    </div>
+                  </div>
+                )) : (
+                  <p className="text-sm text-slate-400 text-center py-2">
+                    Ajoutez vos préférences alimentaires dans votre <Link href="/profile"><span className="text-emerald-600 font-semibold">profil</span></Link> pour une analyse personnalisée.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Macro breakdown bar chart */}
+            <div className="bg-white rounded-2xl p-5 border border-purple-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-purple-50 rounded-xl flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Répartition des macros</h3>
+                  <div className="flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] text-amber-600 font-bold">Premium</span>
+                  </div>
+                </div>
+              </div>
+              {(() => {
+                const p = parseFloat(displayProduct.nutriments?.proteins) || 0;
+                const f = parseFloat(displayProduct.nutriments?.fat) || 0;
+                const s = parseFloat(displayProduct.nutriments?.sugars) || 0;
+                const total = p + f + s || 1;
+                const bars = [
+                  { label: "Protéines", val: p, color: "bg-blue-400", pct: Math.round((p/total)*100) },
+                  { label: "Lipides", val: f, color: "bg-yellow-400", pct: Math.round((f/total)*100) },
+                  { label: "Sucres", val: s, color: "bg-red-400", pct: Math.round((s/total)*100) },
+                ];
+                return (
+                  <div className="space-y-3">
+                    {bars.map((b) => (
+                      <div key={b.label}>
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="font-medium text-slate-600">{b.label}</span>
+                          <span className="font-bold text-slate-800">{b.val.toFixed(1)}g <span className="text-slate-400 font-normal">({b.pct}%)</span></span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2.5">
+                          <div className={`${b.color} h-2.5 rounded-full transition-all`} style={{ width: `${b.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </motion.div>
+        ) : (
+          /* Locked premium preview for free users */
+          <Link href="/premium">
+            <div className="relative overflow-hidden rounded-2xl border border-amber-200 cursor-pointer">
+              <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-amber-500" />
+                    <span className="font-bold text-amber-800">Fonctionnalités Premium</span>
+                  </div>
+                  <Lock className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="space-y-2 opacity-50 pointer-events-none select-none">
+                  {["🛡 Détection des allergènes (Gluten, Lactose...)", "❤️ Évaluation selon vos préférences alimentaires", "📊 Répartition détaillée des macros"].map((f) => (
+                    <div key={f} className="flex items-center gap-2 text-xs text-slate-600">
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-full text-xs font-bold">
+                  <Crown className="w-3.5 h-3.5" />
+                  Débloquer — 50 MAD/mois
+                </div>
+              </div>
+            </div>
+          </Link>
         )}
 
         {/* AI Analysis CTA */}

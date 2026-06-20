@@ -84,28 +84,28 @@ export default function AuthPage() {
   }, [emailValue, registerForm]);
 
   const onLogin = async (data: z.infer<typeof loginSchema>) => {
+    if (data.rememberMe) {
+      localStorage.setItem("rememberedUsername", data.username);
+    } else {
+      localStorage.removeItem("rememberedUsername");
+    }
     try {
-      if (data.rememberMe) {
-        localStorage.setItem("rememberedUsername", data.username);
-      } else {
-        localStorage.removeItem("rememberedUsername");
-      }
       await login(data);
       toast({
         title: "Connexion réussie",
-        description: `Ravi de vous revoir, ${data.username} !`,
+        description: `Ravi de vous revoir !`,
       });
       setLocation("/scan");
     } catch (error: any) {
-      console.error("Login error:", error);
+      // Extract server JSON message if present (format: "401: {\"message\":\"...\"}")
       let errorMessage = "Nom d'utilisateur ou mot de passe incorrect.";
-
-      // Try to extract more specific error from status or response body if available
-      if (error.message?.includes("401")) {
-        errorMessage =
-          "Identifiants invalides. Veuillez vérifier votre nom d'utilisateur et votre mot de passe.";
-      }
-
+      try {
+        const jsonPart = error.message?.split(/^\d+:\s*/)?.[1];
+        if (jsonPart) {
+          const parsed = JSON.parse(jsonPart);
+          if (parsed.message) errorMessage = parsed.message;
+        }
+      } catch (_) {}
       toast({
         variant: "destructive",
         title: "Connexion échouée",
