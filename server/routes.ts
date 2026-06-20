@@ -439,6 +439,65 @@ Retourne UNIQUEMENT du JSON valide : { "alternatives": [{ "name": string, "brand
     }
   });
 
+  // ── AI Product Analysis (Premium) ────────────────────────────────────
+  app.post("/api/products/ai-analyze", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.subscriptionStatus !== "premium") {
+        return res.status(403).json({ message: "Premium required" });
+      }
+      const { product, lang } = req.body;
+      if (!product) return res.status(400).json({ message: "product required" });
+
+      const { openai } = await import("./replit_integrations/chat/routes");
+
+      const langMap: Record<string, string> = {
+        fr: "French",
+        ar: "Arabic (MSA)",
+        en: "English",
+        zgh: "Tamazight (Tifinagh script)",
+      };
+      const responseLang = langMap[lang] || "French";
+
+      const userContext = [
+        user.age ? `Age: ${user.age}` : null,
+        user.gender ? `Gender: ${user.gender}` : null,
+        user.dietaryPreferences?.length
+          ? `Dietary preferences: ${(user.dietaryPreferences as string[]).join(", ")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      const productContext = `
+Product: ${product.name || "Unknown"}
+Brand: ${product.brand || "Unknown"}
+Calories: ${product.calories || 0} kcal per 100g
+Nutrients per 100g: sugars ${product.nutriments?.sugars || 0}g, fat ${product.nutriments?.fat || 0}g, proteins ${product.nutriments?.proteins || 0}g, salt ${product.nutriments?.salt || 0}g
+Halal certified: ${product.isHalalCertified ? "Yes" : "No/Unknown"}
+${product.ingredients ? `Ingredients: ${product.ingredients}` : ""}`.trim();
+
+      const prompt = `You are a certified nutritionist. The user has the following profile: ${userContext || "No profile data"}. 
+Analyze this product and give a SHORT personalized nutritional opinion (3-4 sentences MAX). 
+Be direct and practical. Mention if it fits their dietary needs. Respond ONLY in ${responseLang}.
+
+${productContext}`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 200,
+        temperature: 0.7,
+      });
+
+      const analysis = completion.choices[0]?.message?.content || "";
+      res.json({ analysis });
+    } catch (err) {
+      console.error("AI product analyze error:", err);
+      res.status(500).json({ message: "AI analysis failed" });
+    }
+  });
+
   // ── Subscription: verify Google Play purchase & activate premium ─────
   app.post("/api/subscription/verify", isAuthenticated, async (req: any, res) => {
     try {

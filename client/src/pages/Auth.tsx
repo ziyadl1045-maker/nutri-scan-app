@@ -123,31 +123,19 @@ export default function AuthPage() {
       });
       setLocation("/scan");
     } catch (error: any) {
-      console.error("Registration error:", error);
-      if (error.message?.includes("400")) {
-        try {
-          const body = JSON.parse(error.message.split(": ")[1]);
-          toast({
-            variant: "destructive",
-            title: "Registration Failed",
-            description:
-              body.message || "Please check your details and try again.",
-          });
-        } catch (e) {
-          toast({
-            variant: "destructive",
-            title: "Registration Failed",
-            description:
-              "An account with this email or username already exists.",
-          });
+      let errorMessage = "Un compte avec cet email ou ce nom d'utilisateur existe déjà.";
+      try {
+        const jsonPart = error.message?.split(/^\d+:\s*/)?.[1];
+        if (jsonPart) {
+          const parsed = JSON.parse(jsonPart);
+          if (parsed.message) errorMessage = parsed.message;
         }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Registration Error",
-          description: "Something went wrong. Please try again later.",
-        });
-      }
+      } catch (_) {}
+      toast({
+        variant: "destructive",
+        title: "Inscription échouée",
+        description: errorMessage,
+      });
     }
   };
 
