@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
-import { Scan, ChevronRight, User, Loader2, MessageSquare, Globe } from "lucide-react";
+import { Scan, ChevronRight, User, Loader2, MessageSquare, Globe, Crown, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -89,6 +89,31 @@ export default function Dashboard() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Premium Banner for free users */}
+        {user?.subscriptionStatus !== 'premium' && (
+          <Link href="/premium">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-lg shadow-orange-200/50 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-white/25 rounded-xl flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm">Passer à Premium</p>
+                  <p className="text-white/80 text-xs">50 MAD / 5€ / $5 par mois</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 bg-white/25 px-3 py-1.5 rounded-full">
+                <Zap className="w-3.5 h-3.5 text-white" />
+                <span className="text-white text-xs font-bold">Voir</span>
+              </div>
+            </motion.div>
+          </Link>
+        )}
 
         {/* Action Cards */}
         <div className="grid grid-cols-2 gap-4">

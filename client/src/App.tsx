@@ -17,6 +17,7 @@ import ScanPage from "@/pages/Scan";
 import ProductDetails from "@/pages/ProductDetails";
 import ProfilePage from "@/pages/Profile";
 import ChatPage from "@/pages/Chat";
+import PremiumPage from "@/pages/Premium";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -50,6 +51,9 @@ function Router() {
         </Route>
         <Route path="/chat">
           {!user ? <Landing /> : <ChatPage />}
+        </Route>
+        <Route path="/premium">
+          {!user ? <Landing /> : <PremiumPage />}
         </Route>
         <Route component={NotFound} />
       </Switch>

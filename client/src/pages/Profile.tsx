@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, LogOut, ChevronRight, Scan, Trash2, Smartphone } from "lucide-react";
+import { Loader2, LogOut, ChevronRight, Scan, Trash2, Smartphone, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -147,12 +147,14 @@ export default function ProfilePage() {
             Membre Premium
           </div>
         ) : (
-          <button 
-            onClick={() => toast({ title: "Bientôt disponible", description: "Le système de paiement sera activé lors du déploiement final." })}
-            className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all"
-          >
-            Passer à la version Premium
-          </button>
+          <Link href="/premium">
+            <button 
+              className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-200 hover:bg-amber-100 transition-all"
+            >
+              <Crown className="w-3.5 h-3.5" />
+              Passer à Premium
+            </button>
+          </Link>
         )}
       </div>
 

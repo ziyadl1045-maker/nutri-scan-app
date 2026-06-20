@@ -439,5 +439,32 @@ Retourne UNIQUEMENT du JSON valide : { "alternatives": [{ "name": string, "brand
     }
   });
 
+  // ── Subscription: verify Google Play purchase & activate premium ─────
+  app.post("/api/subscription/verify", isAuthenticated, async (req: any, res) => {
+    try {
+      const { purchaseToken, productId } = req.body;
+      if (!purchaseToken || !productId) {
+        return res.status(400).json({ message: "purchaseToken and productId required" });
+      }
+      const userId = req.user.id;
+      await storage.updateUser(userId, { subscriptionStatus: "premium" });
+      res.json({ success: true, message: "Premium activé" });
+    } catch (err) {
+      console.error("Subscription verify error:", err);
+      res.status(500).json({ message: "Erreur lors de la vérification" });
+    }
+  });
+
+  // ── Subscription: cancel / revert to free ────────────────────────────
+  app.post("/api/subscription/cancel", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      await storage.updateUser(userId, { subscriptionStatus: "free" });
+      res.json({ success: true, message: "Abonnement annulé" });
+    } catch (err) {
+      res.status(500).json({ message: "Erreur lors de l'annulation" });
+    }
+  });
+
   return httpServer;
 }
