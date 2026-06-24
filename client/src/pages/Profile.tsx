@@ -152,12 +152,12 @@ export default function ProfilePage() {
         ) : (
           <div className="space-y-3">
             <div className="text-sm text-slate-500">
-              <span className="font-bold text-slate-700">{5 - (user?.chatMessagesCount || 0)}</span>/5 messages IA restants aujourd'hui
+              <span className="font-bold text-slate-700">{Math.max(0, 10 - (user?.chatMessagesCount || 0))}</span>/10 messages IA restants aujourd'hui
             </div>
             <div className="w-40 mx-auto bg-gray-200 rounded-full h-2">
               <div 
-                className={`h-2 rounded-full transition-all ${(user?.chatMessagesCount || 0) >= 4 ? 'bg-red-400' : (user?.chatMessagesCount || 0) >= 3 ? 'bg-orange-400' : 'bg-emerald-400'}`}
-                style={{ width: `${((user?.chatMessagesCount || 0) / 5) * 100}%` }}
+                className={`h-2 rounded-full transition-all ${(user?.chatMessagesCount || 0) >= 9 ? 'bg-red-400' : (user?.chatMessagesCount || 0) >= 7 ? 'bg-orange-400' : 'bg-emerald-400'}`}
+                style={{ width: `${Math.min(100, ((user?.chatMessagesCount || 0) / 10) * 100)}%` }}
               />
             </div>
             <Link href="/premium">

@@ -76,8 +76,8 @@ export function registerChatRoutes(app: Express): void {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Freemium check: 5 messages per day for free users
-      const FREE_LIMIT = 5;
+      // Freemium check: 10 messages per day for free users
+      const FREE_LIMIT = 10;
       const isPremium = user.subscriptionStatus === "premium";
       
       // Reset count if it's a new day
@@ -91,7 +91,7 @@ export function registerChatRoutes(app: Express): void {
       if (!isPremium && (user.chatMessagesCount || 0) >= FREE_LIMIT) {
         return res.status(403).json({ 
           error: "Limit reached", 
-          message: "Vous avez atteint la limite quotidienne de 5 messages. Passez à la version Premium pour un accès illimité !" 
+          message: "Vous avez atteint la limite quotidienne de 10 messages. Passez à la version Premium pour un accès illimité !" 
         });
       }
 

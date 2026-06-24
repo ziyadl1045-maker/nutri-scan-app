@@ -18,7 +18,7 @@ const FEATURES = [
     color: "text-emerald-600",
     bg: "bg-emerald-50",
     title: "Chat IA illimité",
-    free: "5 messages / jour",
+    free: "10 messages / jour",
     premium: "Illimité",
   },
   {

@@ -27,7 +27,7 @@ export default function ChatPage() {
   const [showHistory, setShowHistory] = useState(false);
 
   const isPremium = user?.subscriptionStatus === 'premium';
-  const FREE_LIMIT = 5;
+  const FREE_LIMIT = 10;
   const used = user?.chatMessagesCount || 0;
   const remaining = Math.max(0, FREE_LIMIT - used);
 
@@ -247,7 +247,7 @@ function ChatWindow({ conversationId }: { conversationId: number }) {
         toast({
           variant: "destructive",
           title: "Limite atteinte",
-          description: "Vous avez atteint votre limite de 5 messages gratuits par jour. Passez à la version Premium !",
+          description: "Vous avez atteint votre limite de 10 messages gratuits par jour. Passez à la version Premium !",
         });
       }
     }
