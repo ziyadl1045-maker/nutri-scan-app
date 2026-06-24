@@ -191,7 +191,11 @@ export async function registerRoutes(
       if (!enhancedName) enhancedName = "Produit inconnu";
 
       // ── 6. Halal status from moroccan DB ──────────────────────────────
+      const isHalalLocal = moroccanProduct?.isHalal ?? true; // Moroccan products are halal by default
       const isHalalCertifiedLocal = moroccanProduct?.isHalalCertified ?? false;
+
+      // Ingredients: prefer moroccan DB, fallback to OpenFoodFacts
+      const ingredientsText = moroccanProduct?.ingredients || offProduct?.ingredients_text || offProduct?.ingredients_text_fr || "";
 
       const productData: any = {
         name: enhancedName,
@@ -206,7 +210,9 @@ export async function registerRoutes(
         alternatives: [],
         dietWarnings: [],
         isMoroccan: !!moroccanProduct || barcode.startsWith("611"),
+        isHalal: isHalalLocal,
         isHalalCertified: isHalalCertifiedLocal,
+        ingredients: ingredientsText,
         localDbMatch: !!moroccanProduct,
       };
 

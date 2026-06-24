@@ -465,8 +465,10 @@ export default function ProductDetails() {
                     let status = t("prem_check");
                     let statusCls = "bg-amber-50 text-amber-600";
                     if (pref === "halal") {
-                      status = displayProduct.isHalalCertified ? t("prem_compatible") : t("prem_check");
-                      statusCls = displayProduct.isHalalCertified ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600";
+                      const isHalal = displayProduct.isHalal === true || displayProduct.isHalalCertified === true;
+                      const isNonHalal = displayProduct.isHalal === false;
+                      status = isNonHalal ? t("prem_incompatible") : isHalal ? t("prem_compatible") : t("prem_check");
+                      statusCls = isNonHalal ? "bg-red-50 text-red-600" : isHalal ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600";
                     } else if (pref === "vegan") {
                       const hasAnimal = /lait|viande|oeuf|poisson|poulet|boeuf|agneau/.test(ingr);
                       status = hasAnimal ? t("prem_incompatible") : t("prem_compatible");
