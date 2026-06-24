@@ -191,7 +191,8 @@ export async function registerRoutes(
       if (!enhancedName) enhancedName = "Produit inconnu";
 
       // ── 6. Halal status from moroccan DB ──────────────────────────────
-      const isHalalLocal = moroccanProduct?.isHalal ?? true; // Moroccan products are halal by default
+      // null = unknown (non-moroccan products), true = halal, false = not halal
+      const isHalalLocal = moroccanProduct ? (moroccanProduct.isHalal ?? true) : null;
       const isHalalCertifiedLocal = moroccanProduct?.isHalalCertified ?? false;
 
       // Ingredients: prefer moroccan DB, fallback to OpenFoodFacts
@@ -376,6 +377,15 @@ Retourne UNIQUEMENT du JSON valide : { "alternatives": [{ "name": string, "brand
           }
 
           productData.dietWarnings = warnings;
+
+          // ── Update isHalal based on what was actually detected ────────────
+          const haramDetected = warnings.some(w => w.startsWith("🚫 Haram"));
+          if (haramDetected) {
+            productData.isHalal = false; // Proven non-halal
+          } else if (productData.isHalal === null) {
+            // For non-Moroccan products with no haram signal, mark as unknown
+            productData.isHalal = null;
+          }
         }
       }
 
