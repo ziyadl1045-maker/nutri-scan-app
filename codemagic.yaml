@@ -10,16 +10,21 @@ workflows:
           include: true
     environment:
       java: 21
+      node: 20
       vars:
         GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
     scripts:
+      - name: Install Node dependencies
+        script: npm install
+      - name: Sync Capacitor (generates android plugin folders)
+        script: npx cap sync android
       - name: Set Android SDK path
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
       - name: Build Android APK
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --warning-mode all
+          ./gradlew assembleRelease --no-daemon
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
     publishing:
