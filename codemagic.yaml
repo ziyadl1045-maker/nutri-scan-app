@@ -13,10 +13,14 @@ workflows:
       node: 20
       vars:
         GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
+        DATABASE_URL: "postgresql://placeholder:placeholder@localhost/placeholder"
+        SESSION_SECRET: "placeholder_secret_for_build_only"
     scripts:
       - name: Install Node dependencies
         script: npm install
-      - name: Sync Capacitor (generates android plugin folders)
+      - name: Build web assets
+        script: npx vite build
+      - name: Sync Capacitor
         script: npx cap sync android
       - name: Set Android SDK path
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
