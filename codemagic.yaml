@@ -9,7 +9,7 @@ workflows:
         - pattern: main
           include: true
     environment:
-      java: 17
+      java: 21
       vars:
         GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m"
     scripts:
