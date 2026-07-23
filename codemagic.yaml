@@ -3,11 +3,7 @@ workflows:
     name: NutriScan Android Release
     max_build_duration: 60
     environment:
-      vars:
-        PACKAGE_NAME: "ma.nutriscan.app"
-        CM_KEYSTORE_PATH: /tmp/nutriscan.keystore
-      groups:
-        - nutriscan_signing
+      node: 20
     scripts:
       - name: Install Node dependencies
         script: npm install
@@ -15,15 +11,10 @@ workflows:
         script: npm run build
       - name: Sync Capacitor
         script: npx cap sync android
-      - name: Decode keystore
-        script: echo $CM_KEYSTORE | base64 --decode > $CM_KEYSTORE_PATH
       - name: Build Android APK
         script: |
           cd android
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
-            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+          chmod +x gradlew
+          ./gradlew assembleRelease
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
