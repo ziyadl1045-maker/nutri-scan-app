@@ -7,3 +7,5 @@ vite.config.ts.*
 attached_assets/*.zip
 attached_assets/unzipped_content/
 attached_assets/generated_images/attached_assets/*.zip
+attached_assets/
+.github/workflows/
