@@ -2,6 +2,12 @@ workflows:
   android-release:
     name: NutriScan Android Release
     max_build_duration: 60
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
     environment:
       java: 17
     scripts:
@@ -20,3 +26,10 @@ workflows:
           ./gradlew assembleRelease --no-daemon --stacktrace
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
+    publishing:
+      email:
+        recipients:
+          - ziyadl1045@gmail.com
+        notify:
+          success: true
+          failure: true
