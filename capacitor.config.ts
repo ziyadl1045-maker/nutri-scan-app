@@ -6,7 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist/public',
   bundledWebRuntime: false,
   server: {
-    androidScheme: 'https',
+    url: 'https://app-viewer-1--ziyadl1045.replit.app',
+    cleartext: false,
   },
   plugins: {
     AdMob: {
