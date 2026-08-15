@@ -12,7 +12,6 @@ export async function initAdMob() {
   if (!isNativePlatform()) return;
   try {
     await AdMob.initialize({
-      requestTrackingAuthorization: false,
       testingDevices: [],
       initializeForTesting: false,
     });

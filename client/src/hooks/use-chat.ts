@@ -88,19 +88,26 @@ export function useChatStream(conversationId: number) {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to send message");
+       if (!res.ok) {
+         const body = await res.json().catch(() => ({}));
+         const error = new Error(body.message || body.error || "Failed to send message");
+         (error as Error & { status?: number }).status = res.status;
+         throw error;
+       }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
 
       if (!reader) return;
 
-      while (true) {
+       let pending = "";
+       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n\n");
+         pending += decoder.decode(value, { stream: true });
+         const lines = pending.split("\n\n");
+         pending = lines.pop() || "";
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
@@ -116,6 +123,15 @@ export function useChatStream(conversationId: number) {
               console.error("Error parsing SSE data", e);
             }
           }
+       // Process a final SSE event if the server closed without a blank line.
+       if (pending.startsWith("data: ")) {
+         try {
+           const data = JSON.parse(pending.slice(6));
+           if (data.content) setStreamingContent(prev => prev + data.content);
+         } catch (e) {
+           console.error("Error parsing final SSE data", e);
+         }
+       }
         }
       }
     } finally {

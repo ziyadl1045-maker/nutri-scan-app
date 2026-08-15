@@ -518,7 +518,7 @@ ${productContext}`;
   app.post("/api/subscription/verify", isAuthenticated, async (req: any, res) => {
     try {
       const { purchaseToken, productId } = req.body;
-      if (!purchaseToken || !productId) {
+      if (!purchaseToken || productId !== "nutriscan_premium_monthly") {
         return res.status(400).json({ message: "purchaseToken and productId required" });
       }
       const userId = req.user.id;

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { BottomNav } from "@/components/BottomNav";
-import { subscribePremium, restorePurchases, verifyPurchaseOnServer } from "@/lib/billing";
+import { subscribePremium, restorePurchases, verifyPurchaseOnServer, isBillingAvailable, initBilling } from "@/lib/billing";
 import { queryClient } from "@/lib/queryClient";
 import {
   Crown, Zap, MessageSquare, ShieldCheck, BarChart3,
@@ -76,9 +76,14 @@ export default function PremiumPage() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [billingAvailable, setBillingAvailable] = useState(isBillingAvailable());
+
+  useEffect(() => {
+    initBilling().then(setBillingAvailable);
+  }, []);
 
   const isPremium = user?.subscriptionStatus === "premium";
-  const isAndroid = typeof (window as any).CdvPurchase !== "undefined";
+  const isAndroid = billingAvailable;
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -103,6 +108,12 @@ export default function PremiumPage() {
         }
       } else if (result.error === "web_only") {
         toast({ title: "Application Android requise", description: "Télécharge l'app NutriScan sur Google Play." });
+      } else if (result.error === "product_not_found" || result.error === "billing_unavailable") {
+        toast({
+          variant: "destructive",
+          title: "Abonnement indisponible",
+          description: "Le produit Premium n'est pas encore disponible sur Google Play pour cette version.",
+        });
       } else {
         toast({ variant: "destructive", title: "Annulé", description: "Abonnement non complété." });
       }
@@ -115,7 +126,8 @@ export default function PremiumPage() {
     setRestoring(true);
     try {
       const result = await restorePurchases();
-      if (result.restored) {
+      const verified = result.token ? await verifyPurchaseOnServer(result.token) : false;
+      if (result.restored && (verified || user?.subscriptionStatus === "premium")) {
         await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
         toast({ title: "✅ Achat restauré !", description: "Ton abonnement Premium est actif." });
         setLocation("/");

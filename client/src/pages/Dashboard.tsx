@@ -60,7 +60,7 @@ export default function Dashboard() {
             ) : (
               <div className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-full">
                 <span className="text-xs font-medium text-slate-500">Compte Gratuit</span>
-                <span className="text-xs text-slate-400">· {5 - (user?.chatMessagesCount || 0)} msg restants</span>
+                <span className="text-xs text-slate-400">· {Math.max(0, 10 - (user?.chatMessagesCount || 0))} msg restants</span>
               </div>
             )}
           </div>

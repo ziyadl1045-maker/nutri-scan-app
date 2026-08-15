@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { initAdMob } from "@/lib/admob";
+import { initBilling } from "@/lib/billing";
 import { AdBanner } from "@/components/AdBanner";
 
 import NotFound from "@/pages/not-found";
@@ -25,6 +26,9 @@ function Router() {
 
   useEffect(() => {
     initAdMob();
+    // This is intentionally called from the app root. Without it the
+    // Premium screen can see the plugin but the Play product is never loaded.
+    initBilling();
   }, []);
 
   if (isLoading) {

@@ -17,7 +17,7 @@ workflows:
         SESSION_SECRET: "placeholder_secret_for_build_only"
     scripts:
       - name: Install Node dependencies
-        script: npm install
+        script: npm install --registry=https://registry.npmjs.org
       - name: Build web assets
         script: npx vite build
       - name: Sync Capacitor
