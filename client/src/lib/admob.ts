@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdOptions, AdLoadInfo, InterstitialAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdOptions } from '@capacitor-community/admob';
 
 export const ADMOB_IDS = {
   banner: 'ca-app-pub-1132707752513601/9796858334',
@@ -8,21 +8,30 @@ export const ADMOB_IDS = {
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
 
-export async function initAdMob() {
-  if (!isNativePlatform()) return;
-  try {
-    await AdMob.initialize({
-      testingDevices: [],
-      initializeForTesting: false,
-    });
-  } catch (e) {
-    console.error('AdMob init error:', e);
-  }
+let initialization: Promise<boolean> | null = null;
+
+export async function initAdMob(): Promise<boolean> {
+  if (!isNativePlatform()) return false;
+  if (initialization) return initialization;
+
+  initialization = AdMob.initialize({
+    testingDevices: [],
+    initializeForTesting: false,
+  }).then(() => true).catch((error) => {
+    console.error('AdMob init error:', error);
+    initialization = null;
+    return false;
+  });
+
+  return initialization;
 }
 
 export async function showBannerAd() {
   if (!isNativePlatform()) return;
   try {
+    // AdBanner and the app root mount in the same React commit. Waiting here
+    // prevents showBanner from racing initAdMob on a cold APK launch.
+    if (!(await initAdMob())) return;
     const options: BannerAdOptions = {
       adId: ADMOB_IDS.banner,
       adSize: BannerAdSize.ADAPTIVE_BANNER,
@@ -48,6 +57,7 @@ export async function hideBannerAd() {
 export async function showInterstitialAd(): Promise<boolean> {
   if (!isNativePlatform()) return false;
   try {
+    if (!(await initAdMob())) return false;
     const options: AdOptions = {
       adId: ADMOB_IDS.interstitial,
       isTesting: false,
