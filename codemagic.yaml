@@ -24,12 +24,13 @@ workflows:
         script: npx cap sync android
       - name: Set Android SDK path
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-      - name: Build Android APK
+      - name: Build Android bundle and APK
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew bundleRelease assembleRelease --no-daemon
     artifacts:
+      - android/app/build/outputs/bundle/release/*.aab
       - android/app/build/outputs/apk/release/*.apk
     publishing:
       email:
